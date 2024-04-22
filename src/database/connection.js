@@ -2,9 +2,10 @@
 
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('electron_storedb', 'root', 'kakashka90', {
- host: 'localhost',
- dialect: 'mysql',
+const sequelize = new Sequelize('co06635_acad', 'co06635_acad', 'kakashka90', {
+ host: '185.114.245.193',
+ port: 3306,
+ dialect: 'mysql'
 });
 
 async function checkDatabaseConnection() {

@@ -1,0 +1,43 @@
+{
+  "name": "electron-app",
+  "productName": "electron-app",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.3.1",
+    "@electron-forge/maker-deb": "^7.3.1",
+    "@electron-forge/maker-rpm": "^7.3.1",
+    "@electron-forge/maker-squirrel": "^7.3.1",
+    "@electron-forge/maker-zip": "^7.3.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
+    "@electron-forge/plugin-fuses": "^7.3.1",
+    "@electron/fuses": "^1.8.0",
+    "electron": "29.3.0",
+    "sequelize-cli": "^6.6.2"
+  },
+  "keywords": [],
+  "author": "koval",
+  "license": "MIT",
+  "dependencies": {
+    "@casl/ability": "^6.7.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "electron-squirrel-startup": "^1.0.0",
+    "express": "^4.19.2",
+    "express-async-handler": "^1.2.0",
+    "express-validator": "^7.0.1",
+    "http-errors": "^2.0.0",
+    "mysql2": "^3.9.4",
+    "node-telegram-bot-api": "^0.65.1",
+    "sequelize": "^6.37.2",
+    "telegraf": "^4.16.3"
+  }
+}
