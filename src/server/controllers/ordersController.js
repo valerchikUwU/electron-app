@@ -73,6 +73,11 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
                     }
                 ],
                 attributes: ['quantity']
+            },
+            {
+                model: OrganizationCustomer,
+                as: 'organization',
+                attributes: ['organizationName']
             }
         ],
         attributes: {
@@ -258,14 +263,17 @@ exports.user_order_create_post = [
         const payeeId = req.body.payeeId;
         const accountId = req.params.accountId;
 
+        
+        const organizationName = await getOrganizationCustomerName(accountId)
+        const organizationCustomerId = await OrganizationCustomer.findOne({
+            where: { organizationName: organizationName }
+        });
         const isDepositProduct = await ifProductTypeDeposit(productId);
         if (isDepositProduct) {
 
 
             const status = 'Черновик депозита';
-            const organizationCustomerId = await OrganizationCustomer.findOne({
-                where: { organizationName: await getOrganizationCustomerName(accountId) }
-            });
+            
             const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');
@@ -285,9 +293,6 @@ exports.user_order_create_post = [
 
         else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
             const status = 'Черновик';
-            const organizationCustomerId = await OrganizationCustomer.findOne({
-                where: { name: getOrganizationCustomerName(accountId) }
-            });
             const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');

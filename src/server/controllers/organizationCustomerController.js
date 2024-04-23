@@ -40,7 +40,7 @@ exports.organization_create_post = [
         // const formattedDate = format(new Date(), 'dd:MM:yyyy');
 
         const organization = new OrganizationCustomer({
-            name: req.body.organizationName,
+            organizationName: req.body.organizationName,
         });
 
         if (!errors.isEmpty()) {
