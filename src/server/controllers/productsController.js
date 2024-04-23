@@ -3,79 +3,85 @@ const { body, validationResult } = require("express-validator");
 const ProductType = require('../../models/productType');
 const Product = require('../../models/product');
 
-exports.productInit_list = asyncHandler(async (req, res, next) => {
-  const productsInit = await Product.findAll({
-    where: { productTypeId: 1 },
-    raw: true
-  });
+exports.products_list = asyncHandler(async (req, res, next) => {
+  const productTypeId = parseInt(req.params.typeId, 10);
 
-  res.json({
-    title: "ProductInitList",
-    productsList: productsInit
-  })
+  if (isNaN(productTypeId)) {
+    return res.status(400).json({ error: 'Invalid product type ID' });
+  }
+
+  switch (productTypeId) {
+    case 1:
+      const productsInit = await Product.findAll({
+        where: { productTypeId: productTypeId },
+        raw: true
+      });
+
+      res.json({
+        title: "ProductInitList",
+        productsList: productsInit
+      });
+      break;
+    case 2:
+      const productsMain = await Product.findAll({
+        where: { productTypeId: productTypeId },
+        raw: true
+      });
+
+      res.json({
+        title: "ProductMainList",
+        productsList: productsMain
+      });
+      break;
+    case 3:
+      const productsForEmployers = await Product.findAll({
+        where: { productTypeId: productTypeId },
+        raw: true
+      });;
+
+      res.json({
+        title: "ProductForEmployersList",
+        productsList: productsForEmployers
+      });
+      break;
+    case 4:
+      const productsDeposit = await Product.findAll({
+        where: { productTypeId: productTypeId },
+        raw: true
+      });;
+
+      res.json({
+        title: "ProductsDeposit",
+        productsList: productsDeposit
+      });
+      break;
+
+  }
+
 });
 
 
-exports.productMain_list = asyncHandler(async (req, res, next) => {
-  const productsMain = await Product.findAll({
-    where: { productTypeId: 2 },
-    raw: true
-  });
-
-  res.json({
-    title: "ProductMainList",
-    productsList: productsMain
-  })
-});
-
-
-exports.productForEmployers_list = asyncHandler(async (req, res, next) => {
-  const productsForEmployers = await Product.findAll({
-    where: { productTypeId: 3 },
-    raw: true
-  });;
-
-  res.json({
-    title: "ProductForEmployersList",
-    productsList: productsForEmployers
-  })
-});
 
 
 
-exports.productDeposit_list = asyncHandler(async (req, res, next) => {
-  const productsDeposit = await Product.findAll({
-    where: { productTypeId: 4 },
-    raw: true
-  });;
-
-  res.json({
-    title: "ProductsDeposit",
-    productsList: productsDeposit
-  })
-});
-
-
-
-
-// Экспорт функции для обработки GET запроса на создание продукта.
-// Эта функция асинхронно получает все типы продуктов из базы данных,
-// которые могут быть использованы при добавлении нового продукта,
-// и возвращает их в формате JSON.
 exports.product_create_get = asyncHandler(async (req, res, next) => {
-  // Используем Promise.all для параллельного выполнения запросов к базе данных.
-  // В данном случае, выполняем запрос к таблице ProductType,
-  // чтобы получить все типы продуктов, отсортированные по id и name.
-  const [allProductTypes] = await Promise.all([
-    ProductType.findAll({ order: [['id']] })
-  ]);
-
-  // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
-  res.json({
-    title: "Create Product",
-    productTypes: allProductTypes
-  });
-});
+  try {
+     // Используем await для ожидания результата запроса к базе данных.
+     const allProductTypes = await ProductType.findAll({
+       order: [['id', 'ASC']] // Сортировка по id и name
+     });
+ 
+     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
+     res.json({
+       title: "Create Product",
+       productTypes: allProductTypes
+     });
+  } catch (error) {
+     // Обработка ошибок
+     console.error(error);
+     res.status(500).json({ error: 'An error occurred while fetching product types' });
+  }
+ });
 
 
 
@@ -128,7 +134,7 @@ exports.product_create_post = [
     } else {
       // Data from form is valid. Save product.
       await product.save();
-      res.redirect('http://localhost:3000/api/:accountId/products/initial');
+      res.redirect(`http://localhost:3000/api/:accountId/productsByType/${req.body.productTypeId}`);
     }
   }),
 ];
@@ -137,8 +143,20 @@ exports.product_create_post = [
 
 
 exports.product_update_get = asyncHandler(async (req, res, next) => {
+  const productId = parseInt(req.params.productId, 10);
+
+  if (isNaN(productId)) {
+    return res.status(400).json({ error: 'Invalid product ID' });
+  }
   const [product, allProductTypes] = await Promise.all([
-    Product.findByPk(req.params.productId, { include: [{ model: ProductType, as: 'productType' }] }),
+    Product.findByPk(productId, {
+      include:
+        [
+          {
+            model: ProductType, as: 'productType'
+          }
+        ]
+    }),
     ProductType.findAll()
   ]);
 
@@ -173,7 +191,7 @@ exports.product_update_put = [
   body("productTypeId", "ProductType must not be empty.")
     .escape()
     .isLength({ min: 1 })
-    .escape(), 
+    .escape(),
 
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -211,7 +229,7 @@ exports.product_update_put = [
       await oldProduct.save();
 
       // Перенаправляем на страницу с деталями продукта.
-      res.redirect("http://localhost:3000/api/:accountId/products/initial");
+      res.redirect("http://localhost:3000/api/:accountId/productsByType/1");
     }
   }),
 ];

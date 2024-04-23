@@ -19,7 +19,6 @@ router.post('/auth', async (req, res) => {
             Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
             const accountId = await Account.findOne({where:{telephoneNumber: foundNumber} })
             res.send({ success: true });
-            res.redirect(`http://localhost:3000/api/${accountId}/accounts`)
             // НЕЯСНО КАК РЕДИРЕКТИТЬ
             // switch(checkUserRole){
 

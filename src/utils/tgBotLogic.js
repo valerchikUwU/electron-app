@@ -30,6 +30,7 @@ async function startBot() {
 
     bot.on('contact', async (ctx) => {
         const phoneNumber = formatPhoneNumber(ctx.message.contact.phone_number);
+        console.log(phoneNumber);
         const telegramId = ctx.message.contact.user_id;
         const response = await fetch('http://localhost:3000/api/auth', {
             method: 'POST',

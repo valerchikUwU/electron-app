@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
+const { Op, fn, col } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const Account = require('../../models/account');
@@ -32,34 +33,50 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
 
 
 exports.admin_orders_list = asyncHandler(async (req, res, next) => {
-    const [allOrders] = await Promise.all([
-        Order.findAll({
+    try {
+        const orders = await Order.findAll({
             where: { status: { [Op.ne]: 'Получен' } },
             include: [
                 {
                     model: Account,
+                    as: 'account',
                     attributes: ['firstName', 'lastName'] // Указываем, какие поля из Account нужно включить
                 },
                 {
                     model: TitleOrders, // Добавляем модель TitleOrders
+                    include: [
+                        {
+                            model: PriceDefinition,
+                            as: 'price',
+                            attributes: []
+                        }
+                    ],
                     attributes: [] // Не включаем price напрямую, так как мы будем использовать агрегатную функцию
                 }
             ],
             attributes: {
                 include: [
-                    [fn('SUM', col('TitleOrders.price')), 'totalPrice'],
+                    [fn('SUM', col('PriceDefinition.priceAccess')), 'totalPrice'],
                     [fn('SUM', col('TitleOrders.quantity')), 'totalQuantity']
                 ]
             },
             group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
-        }).exec(),
-    ]);
-    res.json({
-        title: "all Orders list",
-        orders_list: allOrders
-    })
-})
+        });
+
+        // Обработка полученных заказов
+        console.log(orders);
+
+        res.json({
+            title: "all Orders list",
+            orders_list: orders
+        });
+    } catch (error) {
+        // Обработка ошибок
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching orders' });
+    }
+});
 
 
 
@@ -75,16 +92,18 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
             ]
         }),
         TitleOrders.findAll({
-            where: { orderId: req.params.id }, include: [
+            where: { orderId: req.params.orderId }, include: [
                 {
                     model: Product,
+                    as: 'product',
                     attributes: ['abbreviation']
                 },
                 {
                     model: PriceDefinition,
+                    as: 'price',
                     attributes: ['priceAccess', 'priceBooklet']
                 }]
-        }).exec(),
+        })
     ]);
 
     if (order === null) {
@@ -160,20 +179,45 @@ exports.user_order_create_post = [
 
         if (!req.body) return res.sendStatus(400);
         const priceDefinition = await PriceDefinition.findOne({
-            where: { productId: req.params.id }
+            where: { productId: req.body.productId }
         });
         const productId = req.body.productId;
         const accessType = req.body.accessType;
         const generation = req.body.generation;
         const addBooklet = req.body.addBooklet;
         const quantity = req.body.quantity;
-        if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
+        const payeeId = req.body.payeeId;
+        const accountId = req.params.accountId;
+        if (ifProductTypeDeposit) {
+
+
+            const status = 'Черновик депозита';
+            const organizationCustomerId = await OrganizationCustomer.findOne({
+                where: { organizationName: await getOrganizationCustomerName(accountId) }
+            });
+            const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
+            if (!order) {
+                return res.status(500).send('ERROR CREATING ORDER');
+            }
+
+
+            await TitleOrders.create({ productId: productId, orderId: order.id, accessType: accessType, generation: generation, addBooklet: addBooklet, quantity: quantity, priceDefId: priceDefinition.id })
+                .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
+                .catch(err => {
+                    console.log(err);
+                    res.status(500).send('ERROR CREATING TITLE');
+                });
+
+
+        }
+
+
+        else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
             const status = 'Черновик';
-            const accountId = req.params.accountId;
             const organizationCustomerId = await OrganizationCustomer.findOne({
                 where: { name: getOrganizationCustomerName(accountId) }
             });
-            const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId }).catch(err => console.log(err));
+            const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');
             }
@@ -286,7 +330,7 @@ exports.admin_order_create_post = [
 
 exports.admin_order_update_get = asyncHandler(async (req, res, next) => {
     const [order, allOrganizations] = await Promise.all([
-        Order.findByPk(req.params.id, {
+        Order.findByPk(req.params.orderId, {
             include: [
                 { model: Account, as: 'account' },
                 { model: OrganizationCustomer, as: 'organization' },
@@ -345,7 +389,7 @@ exports.admin_order_update_post = [
             });
             return;
         } else {
-            const oldOrder = await Order.findByPk(req.params.id);
+            const oldOrder = await Order.findByPk(req.params.orderId);
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             await oldOrder.save();
             res.redirect('http://localhost:3000/api/:accountId/orders/all');
@@ -382,14 +426,44 @@ async function getOrganizationCustomerName(accountId) {
             }
         });
         if (account) {
-            const organizationsList = JSON.parse(account.organizationsList);
+            // Предполагаем, что organizationList уже является JSON-массивом
+            // Мы можем напрямую обращаться к его элементам
+            const organizationsList = account.organizationList;
             const firstOrganization = organizationsList[0];
+            console.log(firstOrganization);
             return firstOrganization;
         } else {
             return null;
         }
     } catch (error) {
-        console.error('Error fetching telephone number:', error);
+        console.error('Error fetching org list:', error);
         return null;
+    }
+}
+
+async function ifProductTypeDeposit(productId) {
+    const product = await Product.findByPk(productId);
+    if (product.productTypeId === 4) {
+        return product.productTypeId;
+    }
+    else return false;
+}
+
+
+async function createTitleOrder(productId, orderId, accessType, generation, addBooklet, quantity, priceDefId) {
+    try {
+        await TitleOrders.create({
+            productId: productId,
+            orderId: orderId,
+            accessType: accessType,
+            generation: generation,
+            addBooklet: addBooklet,
+            quantity: quantity,
+            priceDefId: priceDefId
+        });
+        return true;
+    } catch (err) {
+        console.error('ERROR CREATING TITLE:', err);
+        return false;
     }
 }

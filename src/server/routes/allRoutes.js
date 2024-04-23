@@ -8,16 +8,11 @@ const priceDefinition_controller = require("../controllers/priceDefinitionContro
 const titleOrders_controller = require("../controllers/titleOrdersController");
 
 //Товары 8/8
-router.get("/:accountId/products/initial", products_controller.productInit_list);    //++++++
-router.get("/:accountId/products/main", products_controller.productMain_list);                          //++++++
-router.get("/:accountId/products/forEmployers", products_controller.productForEmployers_list); //++++++
-router.get("/:accountId/products/deposit", products_controller.productDeposit_list); //++++++
-router.get("/:accountId/products/newProduct", products_controller.product_create_get); //++++++
-router.post("/:accountId/products/newProduct", products_controller.product_create_post); //++++++
-router.get("/:accountId/products/:productId/update", products_controller.product_update_get);  //++++++
-router.put("/:accountId/products/:productId/update", products_controller.product_update_put);   //++++++
-
-
+router.get("/:accountId/products/newProduct", products_controller.product_create_get);
+router.post("/:accountId/products/newProduct", products_controller.product_create_post);
+router.get("/:accountId/products/:productId/update", products_controller.product_update_get);
+router.put("/:accountId/products/:productId/update", products_controller.product_update_put);
+router.get("/:accountId/productsByType/:typeId", products_controller.products_list);
 
 
 
@@ -27,6 +22,7 @@ router.get("/:accountId/orders/finished", orders_controller.user_finished_orders
 router.get("/:accountId/orders/all", orders_controller.admin_orders_list);
 router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
 router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
+router.post("/:accountId/orders/newOrder", orders_controller.user_order_create_post);
 
 
 //Наименование
