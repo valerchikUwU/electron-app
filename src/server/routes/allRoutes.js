@@ -6,8 +6,13 @@ const orders_controller = require("../controllers/ordersController");
 const payees_controller = require("../controllers/payeeController");
 const priceDefinition_controller = require("../controllers/priceDefinitionController");
 const titleOrders_controller = require("../controllers/titleOrdersController");
+const organizationCustomer_controller = require("../controllers/organizationCustomerController")
 
-//Товары 
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ ТОВАРОВ
+============================================================
+*/
 
 /** 
  * Запрос GET для получения формы создания продукта 
@@ -41,21 +46,32 @@ router.get("/:accountId/productsByType/:typeId", products_controller.products_li
 
 
 
-//Заказы
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ ЗАКАЗОВ
+============================================================
+*/
+
+
+
 
 /**
  * Запрос POST для создания заказа от лица пользователя
  */
 router.post("/:accountId/orders/newOrder", orders_controller.user_order_create_post);
 
+
 /**
  * Запрос GET для получения всех активных заказов пользователя
  */
 router.get("/:accountId/orders", orders_controller.user_active_orders_list);
+
+
 /**
  * Запрос GET для получения всех завершенных заказов пользователя
  */
 router.get("/:accountId/orders/finished", orders_controller.user_finished_orders_list);
+
 
 /**
  * Запрос GET для получения всех заказов от лица админа
@@ -75,25 +91,33 @@ router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
 router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
 
 
-//Наименование
+
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ НАИМЕНОВАНИЙ(TitleOrder)
+============================================================
+*/
+
 
 /**
- * Запрос GET для получения формы обновления TitleOrder в заказе
- * МОЖЕТ БЫТЬ НЕ ПОНАДОБИТСЯ, ТАК КАК В FIGMA НЕТ ФОРМЫ, А ИЗМЕНЕНИЯ ПРОИСХОДЯТ В USER_ORDER_DETAIL
+ * Запрос POST для обновления ВСЕХ! TitleOrder в заказе
  * @param orderId - id заказа
- * @param titleId - id наименования(TitleOrder)
  */
-router.get("/:accountId/orders/:orderId/:titleId/update", titleOrders_controller.user_titleOrder_update_get);
+router.put("/:accountId/orders/:orderId/update", titleOrders_controller.user_titleOrder_update_post);
+
 /**
- * Запрос POST для обновления TitleOrder в заказе
+ * Запрос DELETE для удаления ОДНОГО! TitleOrder в заказе
  * @param orderId - id заказа
- * @param titleId - id наименования(TitleOrder)
  */
-router.put("/:accountId/orders/:orderId/:titleId/update", titleOrders_controller.user_titleOrder_update_post);
+router.delete("/:accountId/orders/:orderId/delete", titleOrders_controller.title_delete)
 
 
 
-//Получатели платежа 3/3
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ Получателей платежа(Payee)
+============================================================
+*/
 
 /**
  * Запрос GET для получения всех получателей платежей (Payee)
@@ -111,7 +135,11 @@ router.post("/:accountId/payees/newPayee", payees_controller.payee_create_post);
 
 
 
-//Прайс листы   
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ ПРАЙС ЛИСТОВ(PriceDefinition)
+============================================================
+*/
 
 /**
  * Запрос GET для получения всех прайс листов(PriceDefinition)
@@ -139,7 +167,13 @@ router.put("/:accountId/prices/:priceDefId/update", priceDefinition_controller.p
 
 
 
-//Аккаунты 2/2
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ АККАУНТОВ
+============================================================
+*/
+
+
 /**
  * Запрос GET для всех пользователей
  */
@@ -152,6 +186,32 @@ router.get("/:accountId/newAccount", accounts_controller.account_create_get);
  * Запрос POST для создания нового аккаунта
  */
 router.post("/:accountId/newAccount", accounts_controller.account_create_post);
+
+
+
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ ОРГАНИЗАЦИЙ ПОКУПАТЕЛЕЙ(АКАДЕМИЯ)(OrganizationCustomer)
+============================================================
+*/
+
+/**
+ * Запрос GET для получения всех организаций(академий)
+ */
+router.get("/:accountId/organizationsCustomer", organizationCustomer_controller.organizations_list);
+
+
+/**
+ * Запрос GET для получения формы создания организации(академии)
+ */
+router.get("/:accountId/organizationsCustomer/newOrganizationCustomer", organizationCustomer_controller.organization_create_get);
+
+
+/**
+ * Запрос POST для создания новой организации(академии)
+ */
+router.post("/:accountId/organizationsCustomer/newOrganizationCustomer",  organizationCustomer_controller.organization_create_post);
+
 
 
 module.exports = router;

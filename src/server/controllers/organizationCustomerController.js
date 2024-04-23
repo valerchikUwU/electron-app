@@ -56,7 +56,7 @@ exports.organization_create_post = [
             // Data from form is valid. Save product.
             await organization.save();
             // res.send({ success: true });
-            res.redirect('http://localhost:3000/api/:accountId/organizations');
+            res.redirect('http://localhost:3000/api/:accountId/organizationsCustomer');
         }
     }),
 ];

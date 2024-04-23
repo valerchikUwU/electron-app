@@ -188,21 +188,15 @@ exports.product_update_put = [
     .trim()
     .isLength({ min: 1 })
     .escape(),
-  body("productTypeId", "ProductType must not be empty.")
-    .escape()
-    .isLength({ min: 1 })
-    .escape(),
 
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-
+    
     const product = new Product({
       name: req.body.name,
       abbreviation: req.body.abbreviation,
-      productTypeId: req.body.productTypeId,
       _id: req.params.productId,
     })
-    console.log(product)
 
     if (!errors.isEmpty()) {
       const [allProductTypes] = await Promise.all([
@@ -223,7 +217,6 @@ exports.product_update_put = [
       // const formattedDate = format(new Date(), 'dd:MM:yyyy');
       oldProduct.name = product.name;
       oldProduct.abbreviation = product.abbreviation;
-      oldProduct.productTypeId = product.productTypeId;
       console.log(oldProduct)
       // Данные из формы валидны. Обновляем запись.
       await oldProduct.save();

@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
-const { Op, fn, col } = require('sequelize');
+const { Sequelize, Op, fn, col } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const Account = require('../../models/account');
@@ -12,22 +12,80 @@ const Product = require('../../models/product');
 
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
-    const allOrders = await Order.findAll({
-        where: { status: { [Op.ne]: 'Получен' }, accountId: accountId },
-        raw: true
+    const organizationList = await getOrganizationList(accountId);
+    const activeOrders = await Order.findAll({
+        where: {
+            accountId: accountId,
+            status: {
+
+                [Op.ne]: 'Получен'
+            }
+        },
+        include: [
+            {
+                model: TitleOrders, // Добавляем модель TitleOrders
+                include: [
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes: ['priceAccess']
+                    }
+                ],
+                attributes: ['quantity']
+            },
+            {
+                model: OrganizationCustomer, 
+                as: 'organization'
+            }
+        ],
+        attributes: {
+            include: [
+                [Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM']
+            ]
+        },
+        group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
+        raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
     });
+
     res.json({
         title: "active Orders list",
-        orders_list: allOrders
+        orders_list: activeOrders,
+        organizationList: organizationList
     })
 });
 
 exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
-    const allOrders = await Order.findAll({ where: { status: 'Получен', accountId: accountId }, raw: true });
+    const finishedOrders = await Order.findAll({
+        where: {
+
+            accountId: accountId,
+            status: 'Получен'
+        },
+        include: [
+            {
+                model: TitleOrders, // Добавляем модель TitleOrders
+                include: [
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes: ['priceAccess']
+                    }
+                ],
+                attributes: ['quantity']
+            }
+        ],
+        attributes: {
+            include: [
+                [Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM']
+            ]
+        },
+        group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
+        raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
+    });
     res.json({
         title: "finished Orders list",
-        orders_list: allOrders
+        orders_list: finishedOrders
     })
 });
 
@@ -37,7 +95,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
 exports.admin_orders_list = asyncHandler(async (req, res, next) => {
     try {
         const orders = await Order.findAll({
-            where: { status: { [Op.ne]: 'Получен' } },
+            where: { status: { [Op.notIn]: ['Получен', 'Черновик', 'Черновик депозита'] } },
             include: [
                 {
                     model: Account,
@@ -50,24 +108,21 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                         {
                             model: PriceDefinition,
                             as: 'price',
-                            attributes: []
+                            attributes: ['priceAccess']
                         }
                     ],
-                    attributes: [] // Не включаем price напрямую, так как мы будем использовать агрегатную функцию
+                    attributes: ['quantity']
                 }
             ],
             attributes: {
                 include: [
-                    [fn('SUM', col('PriceDefinition.priceAccess')), 'totalPrice'],
-                    [fn('SUM', col('TitleOrders.quantity')), 'totalQuantity']
+                    [Sequelize.literal(`SUM(quantity * priceAccess)`), 'totalPrice']
                 ]
             },
             group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
 
-        // Обработка полученных заказов
-        console.log(orders);
 
         res.json({
             title: "all Orders list",
@@ -89,7 +144,6 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
             include: [
-                { model: Account, as: 'account' },
                 { model: OrganizationCustomer, as: 'organization' }
             ]
         }),
@@ -125,25 +179,28 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
 
 
 exports.admin_order_detail = asyncHandler(async (req, res, next) => {
-    // Get details of books, book instances for specific book
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
             include: [
-                { 
-                    model: Account, as: 'account' 
+                {
+                    model: Account, as: 'account'
                 },
-                { 
-                    model: OrganizationCustomer, 
-                    as: 'organization' 
+                {
+                    model: OrganizationCustomer,
+                    as: 'organization'
                 },
-                { 
-                    model: Payee, 
-                    as: "payee" 
+                {
+                    model: Payee,
+                    as: "payee"
                 }
             ]
         }),
         TitleOrders.findAll({
-            where: { orderId: req.params.orderId }, include: [
+            where: 
+            { 
+                orderId: req.params.orderId 
+            }, 
+            include: [
                 {
                     model: Product,
                     as: 'product',
@@ -200,7 +257,9 @@ exports.user_order_create_post = [
         const quantity = req.body.quantity;
         const payeeId = req.body.payeeId;
         const accountId = req.params.accountId;
-        if (ifProductTypeDeposit) {
+
+        const isDepositProduct = await ifProductTypeDeposit(productId);
+        if (isDepositProduct) {
 
 
             const status = 'Черновик депозита';
@@ -337,6 +396,48 @@ exports.admin_order_create_post = [
 
 
 
+exports.user_draftOrder_update_post = [
+
+    
+
+    // Validate and sanitize fields.
+    
+    body("organizationCustomerId", "organizationCustomerId must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+
+
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        const order = new Order({
+            organizationCustomerId: req.body.organizationCustomerId,
+            _id: req.params.orderId
+        });
+
+        if (!errors.isEmpty()) {
+            const [allOrganizations] = await Promise.all([
+                getOrganizationList(req.params.accountId)
+            ]);
+
+
+            res.json({
+                title: "Update order",
+                allOrganizations: allOrganizations,
+                order: order,
+                errors: errors.array(),
+            });
+            return;
+        } else {
+            const oldOrder = await Order.findByPk(req.params.orderId);
+            oldOrder.organizationCustomerId = order.organizationCustomerId;
+            await oldOrder.save();
+            res.redirect('http://localhost:3000/api/:accountId/orders');
+        }
+    }),
+];
+
 
 
 
@@ -366,6 +467,12 @@ exports.admin_order_update_get = asyncHandler(async (req, res, next) => {
         allOrganizations: allOrganizations
     });
 });
+
+
+
+
+
+
 
 
 exports.admin_order_update_post = [
@@ -455,8 +562,10 @@ async function getOrganizationCustomerName(accountId) {
 
 async function ifProductTypeDeposit(productId) {
     const product = await Product.findByPk(productId);
-    if (product.productTypeId === 4) {
-        return product.productTypeId;
+    const productTypeId = parseInt(product.productTypeId, 10);
+    console.log(productTypeId);
+    if (productTypeId === 4) {
+        return true;
     }
     else return false;
 }
