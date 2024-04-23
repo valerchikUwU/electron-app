@@ -31,6 +31,8 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     })
 });
 
+// ДОДЕЛАТЬ "Unknown column 'PriceDefinition.priceAccess' in 'field list'",
+
 
 exports.admin_orders_list = asyncHandler(async (req, res, next) => {
     try {
@@ -127,22 +129,32 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
             include: [
-                { model: Account, as: 'account' },
-                { model: OrganizationCustomer, as: 'organization' },
-                { model: Payee, as: "payee" }
+                { 
+                    model: Account, as: 'account' 
+                },
+                { 
+                    model: OrganizationCustomer, 
+                    as: 'organization' 
+                },
+                { 
+                    model: Payee, 
+                    as: "payee" 
+                }
             ]
         }),
         TitleOrders.findAll({
             where: { orderId: req.params.orderId }, include: [
                 {
                     model: Product,
+                    as: 'product',
                     attributes: ['abbreviation']
                 },
                 {
                     model: PriceDefinition,
+                    as: 'price',
                     attributes: ['priceAccess', 'priceBooklet']
                 }]
-        }).exec(),
+        })
     ]);
 
     if (order === null) {
