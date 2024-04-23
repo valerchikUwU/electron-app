@@ -7,7 +7,7 @@ const TitleOrders = require('../../models/titleOrders');
 
 
 
-exports.user_titleOrder_update_post = [
+exports.user_titleOrder_update_put = [
 
 
     // Validate and sanitize fields.
@@ -44,10 +44,11 @@ exports.user_titleOrder_update_post = [
         )
 
         if (!errors.isEmpty()) {
-            const [order, titleOrders] = await Promise.all(
+            const [order, titleOrders] = await Promise.all([
                 Order.findByPk(req.params.orderId),
-                TitleOrders.findAll({ where: { orderId: req.params.orderId } }));
-
+                TitleOrders.findAll({ where: { orderId: req.params.orderId } })
+            ]);
+            
 
             res.json({
                 title: "Update order",
@@ -59,13 +60,15 @@ exports.user_titleOrder_update_post = [
         } else {
 
             for (const title of titlesToUpdate) {
-                const oldTitle = await TitleOrders.findByPk(title.titleId);
+                const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
-                    oldTitle.productId = title.productId
-                    oldTitle.accessType = title.accessType;
-                    oldTitle.generation = title.generation;
-                    oldTitle.quantity = title.quantity;
-                    oldTitle.addBooklet = title.addBooklet;
+                    // Проверяем, были ли предоставлены новые значения для полей
+                    if (req.body.productId) oldTitle.productId = req.body.productId;
+                    if (req.body.accessType) oldTitle.accessType = req.body.accessType;
+                    if (req.body.generation) oldTitle.generation = req.body.generation;
+                    if (req.body.quantity) oldTitle.quantity = req.body.quantity;
+                    if (req.body.addBooklet !== undefined) oldTitle.addBooklet = req.body.addBooklet;
+
                     await oldTitle.save();
                 }
             }

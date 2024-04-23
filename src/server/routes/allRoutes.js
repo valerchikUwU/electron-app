@@ -103,13 +103,13 @@ router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_de
  * Запрос POST для обновления ВСЕХ! TitleOrder в заказе
  * @param orderId - id заказа
  */
-router.put("/:accountId/orders/:orderId/update", titleOrders_controller.user_titleOrder_update_post);
+router.put("/:accountId/orders/update/:orderId", titleOrders_controller.user_titleOrder_update_put);
 
 /**
  * Запрос DELETE для удаления ОДНОГО! TitleOrder в заказе
  * @param orderId - id заказа
  */
-router.delete("/:accountId/orders/:orderId/delete", titleOrders_controller.title_delete)
+router.delete("/:accountId/orders/delete/:orderId", titleOrders_controller.title_delete)
 
 
 

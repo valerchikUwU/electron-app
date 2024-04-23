@@ -76,13 +76,17 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
             },
             {
                 model: OrganizationCustomer,
-                as: 'organization',
-                attributes: ['organizationName']
+                as: 'organization'
             }
         ],
         attributes: {
             include: [
-                [Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM']
+                [
+                    Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
+                ],
+                [
+                    Sequelize.literal(`organizationName`), 'organizationName'
+                ]
             ]
         },
         group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
