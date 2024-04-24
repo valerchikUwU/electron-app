@@ -17,13 +17,14 @@ const TitleOrders = sequelize.define('TitleOrders', {
    },
    generation: {
       type: DataTypes.ENUM('Первое поколение', 'Второе поколение'),
-      allowNull: true
+      allowNull: false
    },
 
 
    addBooklet: {
       type: DataTypes.BOOLEAN,
-      allowNull: true
+      allowNull: false,
+      defaultValue: 0
    },
 
    quantity: {

@@ -13,50 +13,50 @@ const Product = require('../../models/product');
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
     const organizationList = await getOrganizationList(accountId);
-    const activeOrders = await Order.findAll({
-        where:
-        {
-            accountId: accountId,
-            status:
-            {
+    const { Sequelize, Op } = require('sequelize');
 
+    const activeOrders = await Order.findAll({
+        where: {
+            accountId: accountId,
+            status: {
                 [Op.ne]: 'Получен'
             }
         },
-        include:
-            [
-                {
-                    model: TitleOrders, // Добавляем модель TitleOrders
-                    include:
-                        [
-                            {
-                                model: PriceDefinition,
-                                as: 'price',
-                                attributes: ['priceAccess']
-                            }
-                        ],
-                    attributes: ['quantity']
-                },
-                {
-                    model: OrganizationCustomer,
-                    as: 'organization'
-                }
-            ],
-        attributes:
-        {
-            include:
+        include: [
+            {
+                model: TitleOrders,
+                include: [
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes:
+                            [
+                                'priceAccess',
+                                'priceBooklet'
+                            ]
+                    }
+                ],
+                attributes: ['quantity', 'addBooklet'] // Добавляем addBooklet в атрибуты
+            },
+            {
+                model: OrganizationCustomer,
+                as: 'organization'
+            }
+        ],
+        attributes: {
+            include: [
                 [
-                    [
-                        Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
-                    ],
-                    [
-                        Sequelize.literal(`organizationName`), 'organizationName'
-                    ]
+                    Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                ],
+                [
+                    Sequelize.literal(`organizationName`), 'organizationName'
                 ]
+            ]
         },
-        group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
-        raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
+        group: ['Order.id'],
+        raw: true
     });
+
 
     res.json({
         title: "active Orders list",
@@ -80,7 +80,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes: ['priceAccess']
+                        attributes: ['priceAccess', 'priceBooklet']
                     }
                 ],
                 attributes: ['quantity']
@@ -93,7 +93,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
         attributes: {
             include: [
                 [
-                    Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
+                    Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                 ],
                 [
                     Sequelize.literal(`organizationName`), 'organizationName'
@@ -119,7 +119,12 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
             {
                 status:
                 {
-                    [Op.notIn]: ['Получен', 'Черновик', 'Черновик депозита']
+                    [Op.notIn]:
+                        [
+                            'Получен',
+                            'Черновик',
+                            'Черновик депозита'
+                        ]
                 }
             },
 
@@ -129,7 +134,11 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                     {
                         model: Account,
                         as: 'account',
-                        attributes: ['firstName', 'lastName']
+                        attributes:
+                            [
+                                'firstName',
+                                'lastName'
+                            ]
                     },
                     {
                         model: TitleOrders, // Добавляем модель TitleOrders
@@ -138,7 +147,10 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                                 {
                                     model: PriceDefinition,
                                     as: 'price',
-                                    attributes: ['priceAccess', 'priceBooklet']
+                                    attributes:
+                                        [
+                                            'priceAccess', 'priceBooklet'
+                                        ]
                                 }
                             ],
                         attributes: ['quantity']
@@ -157,7 +169,7 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                             Sequelize.literal(`CONCAT(account.firstName, ' ', account.lastName)`), 'fullName'
                         ],
                         [
-                            Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
+                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
                         // [
                         //     Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
@@ -252,32 +264,37 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
             include:
-            [
-                {
-                    model: TitleOrders, // Добавляем модель TitleOrders
-                    include:
-                        [
-                            {
-                                model: PriceDefinition,
-                                as: 'price',
-                                attributes: ['priceAccess']
-                            }
-                        ],
-                    attributes: ['quantity']
-                }
-            ],
-        attributes:
-        {
-            include:
                 [
+                    {
+                        model: TitleOrders, // Добавляем модель TitleOrders
+                        include:
+                            [
+                                {
+                                    model: PriceDefinition,
+                                    as: 'price',
+                                    attributes: 
+                                    [
+                                        'priceAccess', 'priceBooklet'
+                                    ]
+                                }
+                            ],
+                        attributes: ['quantity']
+                    }
+                ],
+            attributes:
+            {
+                include:
                     [
-                        Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
+                        [
+                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                        ],
+
+                        
                     ]
-                ]
-        },
+            },
         }),
         TitleOrders.findAll({
-            where: { orderId: req.params.orderId }, 
+            where: { orderId: req.params.orderId },
             include:
                 [
                     {
@@ -291,15 +308,19 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                         attributes: ['priceAccess', 'priceBooklet']
                     }
                 ],
-                attributes:
-                {
-                    include:
+            attributes:
+            {
+                include:
+                    [
                         [
-                            [
-                                Sequelize.literal(`(quantity * priceAccess + priceBooklet)`), 'SUMforOneTitle'
-                            ]
-                        ]
-                },
+                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
+                        ],
+
+                        [
+                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
+                        ],
+                    ]
+            },
         })
     ]);
 
@@ -363,7 +384,11 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes: ['priceAccess', 'priceBooklet']
+                        attributes: 
+                        [
+                            'priceAccess', 
+                            'priceBooklet'
+                        ]
                     }
                 ],
             attributes:
@@ -371,7 +396,10 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                 include:
                     [
                         [
-                            Sequelize.literal(`SUM(quantity * priceAccess)`), 'totalPrice'
+                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                        ],
+                        [
+                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
                         ]
                     ]
             }

@@ -97,9 +97,17 @@ TitleOrders.belongsTo(Product, {
 });
 
 
-Order.hasOne(TitleOrders, { foreignKey: 'orderId' });
+Order.hasOne(TitleOrders, {
+   foreignKey: {
+      name: 'orderId',
+      type: DataTypes.UUID,
+      allowNull: false,
+   }
+});
 
-TitleOrders.belongsTo(Order, { foreignKey: 'orderId' });
+TitleOrders.belongsTo(Order, {
+   foreignKey: 'orderId'
+});
 
 PriceDefinition.hasMany(TitleOrders, {
    foreignKey: {
@@ -124,7 +132,7 @@ Account.hasMany(Order, {
    as: 'orders'
 });
 
-Order.belongsTo(Account, { 
+Order.belongsTo(Account, {
    oreignKey: 'accountId',
    as: 'account'
 })

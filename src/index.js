@@ -57,8 +57,8 @@ async function syncModels() {
      await Product.sync();
      await PriceDefinition.sync();
      await CommisionReciever.sync();
-     await Order.sync();
-     await TitleOrders.sync();
+     await Order.sync({ alter: true });
+     await TitleOrders.sync({ alter: true });
      await AccrualRule.sync();
      console.log('Syncronized successfully');
   } catch (error) {
