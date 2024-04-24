@@ -14,39 +14,45 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
     const organizationList = await getOrganizationList(accountId);
     const activeOrders = await Order.findAll({
-        where: {
+        where:
+        {
             accountId: accountId,
-            status: {
+            status:
+            {
 
                 [Op.ne]: 'Получен'
             }
         },
-        include: [
-            {
-                model: TitleOrders, // Добавляем модель TitleOrders
-                include: [
-                    {
-                        model: PriceDefinition,
-                        as: 'price',
-                        attributes: ['priceAccess']
-                    }
-                ],
-                attributes: ['quantity']
-            },
-            {
-                model: OrganizationCustomer, 
-                as: 'organization'
-            }
-        ],
-        attributes: {
-            include: [
+        include:
+            [
+                {
+                    model: TitleOrders, // Добавляем модель TitleOrders
+                    include:
+                        [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes: ['priceAccess']
+                            }
+                        ],
+                    attributes: ['quantity']
+                },
+                {
+                    model: OrganizationCustomer,
+                    as: 'organization'
+                }
+            ],
+        attributes:
+        {
+            include:
                 [
-                    Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
-                ],
-                [
-                    Sequelize.literal(`organizationName`), 'organizationName'
+                    [
+                        Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
+                    ],
+                    [
+                        Sequelize.literal(`organizationName`), 'organizationName'
+                    ]
                 ]
-            ]
         },
         group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
         raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
@@ -103,36 +109,124 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     })
 });
 
-// ДОДЕЛАТЬ "Unknown column 'PriceDefinition.priceAccess' in 'field list'",
+
 
 
 exports.admin_orders_list = asyncHandler(async (req, res, next) => {
     try {
         const orders = await Order.findAll({
-            where: { status: { [Op.notIn]: ['Получен', 'Черновик', 'Черновик депозита'] } },
-            include: [
+            where:
+            {
+                status:
                 {
-                    model: Account,
-                    as: 'account',
-                    attributes: ['firstName', 'lastName'] // Указываем, какие поля из Account нужно включить
-                },
-                {
-                    model: TitleOrders, // Добавляем модель TitleOrders
-                    include: [
-                        {
-                            model: PriceDefinition,
-                            as: 'price',
-                            attributes: ['priceAccess']
-                        }
-                    ],
-                    attributes: ['quantity']
+                    [Op.notIn]: ['Получен', 'Черновик', 'Черновик депозита']
                 }
-            ],
-            attributes: {
-                include: [
-                    [Sequelize.literal(`SUM(quantity * priceAccess)`), 'totalPrice']
-                ]
             },
+
+
+            include:
+                [
+                    {
+                        model: Account,
+                        as: 'account',
+                        attributes: ['firstName', 'lastName']
+                    },
+                    {
+                        model: TitleOrders, // Добавляем модель TitleOrders
+                        include:
+                            [
+                                {
+                                    model: PriceDefinition,
+                                    as: 'price',
+                                    attributes: ['priceAccess', 'priceBooklet']
+                                }
+                            ],
+                        attributes: ['quantity']
+                    },
+                    {
+                        model: OrganizationCustomer,
+                        as: 'organization'
+                    }
+                ],
+            attributes:
+            {
+                include:
+                    [
+
+                        [
+                            Sequelize.literal(`CONCAT(account.firstName, ' ', account.lastName)`), 'fullName'
+                        ],
+                        [
+                            Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
+                        ],
+                        // [
+                        //     Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
+                        // ]
+                        [
+                            Sequelize.literal(`organizationName`), 'organizationName'
+                        ]
+                    ]
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // include: 
+            // [
+            //     {
+            //         model: Account,
+            //         as: 'account',
+            //         attributes: ['firstName', 'lastName']
+            //     },
+
+            //     {
+            //         model: TitleOrders, // Добавляем модель TitleOrders
+            //         include: 
+            //         [
+            //             {
+            //                 model: PriceDefinition,
+            //                 as: 'price',
+            //                 attributes: ['priceAccess']
+            //             }
+            //         ],
+            //         attributes: ['quantity']
+            //     },
+
+            //     {
+            //         model: OrganizationCustomer,
+            //         as: 'organization',
+            //         attributes: ['organizationName']
+            //     }
+            // ],
+
+            // attributes: 
+            // {
+            //     include: 
+            //     [
+            //         [
+            //             Sequelize.literal(`CONCAT(account.firstName, ' ', account.lastName)`), 'fullName'
+            //         ],
+            //         [
+            //             Sequelize.literal(`organizationName`), 'organizationName'
+            //         ]
+            //         [
+            //             Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
+            //         ],
+            //         [
+            //             Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
+            //         ]
+
+            //     ]
+            // },
             group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
@@ -157,22 +251,55 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
     // Get details of books, book instances for specific book
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
-            include: [
-                { model: OrganizationCustomer, as: 'organization' }
-            ]
+            include:
+            [
+                {
+                    model: TitleOrders, // Добавляем модель TitleOrders
+                    include:
+                        [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes: ['priceAccess']
+                            }
+                        ],
+                    attributes: ['quantity']
+                }
+            ],
+        attributes:
+        {
+            include:
+                [
+                    [
+                        Sequelize.literal(`SUM(quantity * priceAccess + priceBooklet)`), 'SUM'
+                    ]
+                ]
+        },
         }),
         TitleOrders.findAll({
-            where: { orderId: req.params.orderId }, include: [
+            where: { orderId: req.params.orderId }, 
+            include:
+                [
+                    {
+                        model: Product,
+                        as: 'product',
+                        attributes: ['abbreviation']
+                    },
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes: ['priceAccess', 'priceBooklet']
+                    }
+                ],
+                attributes:
                 {
-                    model: Product,
-                    as: 'product',
-                    attributes: ['abbreviation']
+                    include:
+                        [
+                            [
+                                Sequelize.literal(`(quantity * priceAccess + priceBooklet)`), 'SUMforOneTitle'
+                            ]
+                        ]
                 },
-                {
-                    model: PriceDefinition,
-                    as: 'price',
-                    attributes: ['priceAccess', 'priceBooklet']
-                }]
         })
     ]);
 
@@ -195,36 +322,59 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
 exports.admin_order_detail = asyncHandler(async (req, res, next) => {
     const [order, titles] = await Promise.all([
         Order.findByPk(req.params.orderId, {
-            include: [
-                {
-                    model: Account, as: 'account'
-                },
-                {
-                    model: OrganizationCustomer,
-                    as: 'organization'
-                },
-                {
-                    model: Payee,
-                    as: "payee"
-                }
-            ]
+            include:
+                [
+                    {
+                        model: OrganizationCustomer,
+                        as: 'organization',
+                        attributes: ['organizationName']
+                    },
+                    {
+                        model: Payee,
+                        as: "payee",
+                        attributes: ['name']
+                    }
+                ],
+            attributes:
+            {
+                include:
+                    [
+                        [
+                            Sequelize.literal(`name`), 'payeeName'
+                        ],
+                        [
+                            Sequelize.literal(`organizationName`), 'organizationName'
+                        ]
+                    ]
+            }
         }),
         TitleOrders.findAll({
-            where: 
-            { 
-                orderId: req.params.orderId 
-            }, 
-            include: [
-                {
-                    model: Product,
-                    as: 'product',
-                    attributes: ['abbreviation']
-                },
-                {
-                    model: PriceDefinition,
-                    as: 'price',
-                    attributes: ['priceAccess', 'priceBooklet']
-                }]
+            where:
+            {
+                orderId: req.params.orderId
+            },
+            include:
+                [
+                    {
+                        model: Product,
+                        as: 'product',
+                        attributes: ['abbreviation']
+                    },
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes: ['priceAccess', 'priceBooklet']
+                    }
+                ],
+            attributes:
+            {
+                include:
+                    [
+                        [
+                            Sequelize.literal(`SUM(quantity * priceAccess)`), 'totalPrice'
+                        ]
+                    ]
+            }
         })
     ]);
 
@@ -272,7 +422,7 @@ exports.user_order_create_post = [
         const payeeId = req.body.payeeId;
         const accountId = req.params.accountId;
 
-        
+
         const organizationName = await getOrganizationCustomerName(accountId)
         const organizationCustomerId = await OrganizationCustomer.findOne({
             where: { organizationName: organizationName }
@@ -282,7 +432,7 @@ exports.user_order_create_post = [
 
 
             const status = 'Черновик депозита';
-            
+
             const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');
@@ -410,12 +560,12 @@ exports.admin_order_create_post = [
 
 
 
-exports.user_draftOrder_update_post = [
+exports.user_draftOrder_update_put = [
 
-    
+
 
     // Validate and sanitize fields.
-    
+
     body("organizationCustomerId", "organizationCustomerId must not be empty.")
         .trim()
         .isLength({ min: 1 })
@@ -455,32 +605,6 @@ exports.user_draftOrder_update_post = [
 
 
 
-exports.admin_order_update_get = asyncHandler(async (req, res, next) => {
-    const [order, allOrganizations] = await Promise.all([
-        Order.findByPk(req.params.orderId, {
-            include: [
-                { model: Account, as: 'account' },
-                { model: OrganizationCustomer, as: 'organization' },
-                { model: Payee, as: 'payee' }
-            ]
-        }),
-        getOrganizationList(req.params.accountId)
-    ]);
-
-    if (!order) {
-        const err = new Error("order not found");
-        err.status = 404;
-        return next(err);
-    }
-
-
-
-    res.json({
-        title: "Update order",
-        order: order,
-        allOrganizations: allOrganizations
-    });
-});
 
 
 
@@ -488,8 +612,7 @@ exports.admin_order_update_get = asyncHandler(async (req, res, next) => {
 
 
 
-
-exports.admin_order_update_post = [
+exports.admin_order_update_put = [
 
 
     // Validate and sanitize fields.
@@ -498,6 +621,13 @@ exports.admin_order_update_post = [
         .trim()
         .isLength({ min: 1 })
         .escape(),
+    body("status", "status must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("billNumber")
+        .optional({ checkFalsy: true })
+        .escape(),
 
 
     asyncHandler(async (req, res, next) => {
@@ -505,6 +635,8 @@ exports.admin_order_update_post = [
 
         const order = new Order({
             organizationCustomerId: req.body.organizationCustomerId,
+            status: req.body.status,
+            billNumber: req.body.billNumber,
             _id: req.params.orderId
         });
 
@@ -524,6 +656,8 @@ exports.admin_order_update_post = [
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
             oldOrder.organizationCustomerId = order.organizationCustomerId;
+            oldOrder.status = order.status;
+            oldOrder.billNumber = order.billNumber;
             await oldOrder.save();
             res.redirect('http://localhost:3000/api/:accountId/orders/all');
         }

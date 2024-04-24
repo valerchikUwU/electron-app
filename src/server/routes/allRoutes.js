@@ -60,6 +60,15 @@ router.get("/:accountId/productsByType/:typeId", products_controller.products_li
  */
 router.post("/:accountId/orders/newOrder", orders_controller.user_order_create_post);
 
+/**
+ * Запрос PUT для обновления черновика заказа от лица пользователя
+ */
+router.put("/:accountId/orders/update", orders_controller.user_draftOrder_update_put)
+
+/**
+ * Запрос PUT для обновления черновика заказа от лица админа
+ */
+router.put("/:accountId/orders/update", orders_controller.user_draftOrder_update_put)
 
 /**
  * Запрос GET для получения всех активных заказов пользователя
@@ -79,16 +88,17 @@ router.get("/:accountId/orders/finished", orders_controller.user_finished_orders
 router.get("/:accountId/orders/all", orders_controller.admin_orders_list);
 
 /**
+ * Запрос GET для получения деталей (Всех TitleOrders и OrganizationCustomer) для выбранного заказа от лица админа
+ * @param orderId - id заказа 
+ */
+router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
+
+/**
  * Запрос GET для получения деталей (Всех TitleOrders) для выбранного заказа
  * @param orderId - id заказа
  */
 router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
 
-/**
- * Запрос GET для получения деталей (Всех TitleOrders и OrganizationCustomer) для выбранного заказа от лица админа
- * @param orderId - id заказа 
- */
-router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
 
 
 

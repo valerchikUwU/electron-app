@@ -43,7 +43,7 @@ exports.user_titleOrder_update_put = [
 
         
         const titlesToUpdate = req.body.titlesToUpdate;
-
+        console.log(titlesToUpdate);
         if (!errors.isEmpty()) {
             const [order, titleOrders] = await Promise.all([
                 Order.findByPk(req.params.orderId),
@@ -64,13 +64,13 @@ exports.user_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    console.log(title);
+                    
                     if (title.productId) oldTitle.productId = title.productId;
                     if (title.accessType) oldTitle.accessType = title.accessType;
                     if (title.generation) oldTitle.generation = title.generation;
                     if (title.quantity) oldTitle.quantity = title.quantity;
                     if (title.addBooklet !== undefined) oldTitle.addBooklet = title.addBooklet;
-
+                    console.log(oldTitle);
                     await oldTitle.save();
                 }
             }
