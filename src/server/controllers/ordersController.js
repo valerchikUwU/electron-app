@@ -123,7 +123,8 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                         [
                             'Получен',
                             'Черновик',
-                            'Черновик депозита'
+                            'Черновик депозита',
+                            'Отменен'
                         ]
                 }
             },
@@ -171,74 +172,16 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                         [
                             Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
-                        // [
-                        //     Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
-                        // ]
                         [
                             Sequelize.literal(`organizationName`), 'organizationName'
+                        ],
+                        [
+                            Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
                         ]
                     ]
             },
 
 
-
-
-
-
-
-
-
-
-
-
-
-            // include: 
-            // [
-            //     {
-            //         model: Account,
-            //         as: 'account',
-            //         attributes: ['firstName', 'lastName']
-            //     },
-
-            //     {
-            //         model: TitleOrders, // Добавляем модель TitleOrders
-            //         include: 
-            //         [
-            //             {
-            //                 model: PriceDefinition,
-            //                 as: 'price',
-            //                 attributes: ['priceAccess']
-            //             }
-            //         ],
-            //         attributes: ['quantity']
-            //     },
-
-            //     {
-            //         model: OrganizationCustomer,
-            //         as: 'organization',
-            //         attributes: ['organizationName']
-            //     }
-            // ],
-
-            // attributes: 
-            // {
-            //     include: 
-            //     [
-            //         [
-            //             Sequelize.literal(`CONCAT(account.firstName, ' ', account.lastName)`), 'fullName'
-            //         ],
-            //         [
-            //             Sequelize.literal(`organizationName`), 'organizationName'
-            //         ]
-            //         [
-            //             Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
-            //         ],
-            //         [
-            //             Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
-            //         ]
-
-            //     ]
-            // },
             group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
@@ -257,6 +200,88 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
 
 
 
+exports.admin_archivedOrders_list = asyncHandler(async (req, res, next) => {
+    try {
+        const orders = await Order.findAll({
+            where:
+            {
+                status:
+                {
+                    [Op.in]:
+                        [
+                            'Получен',
+                            'Отменен'
+                        ]
+                }
+            },
+
+
+            include:
+                [
+                    {
+                        model: Account,
+                        as: 'account',
+                        attributes:
+                            [
+                                'firstName',
+                                'lastName'
+                            ]
+                    },
+                    {
+                        model: TitleOrders, // Добавляем модель TitleOrders
+                        include:
+                            [
+                                {
+                                    model: PriceDefinition,
+                                    as: 'price',
+                                    attributes:
+                                        [
+                                            'priceAccess', 'priceBooklet'
+                                        ]
+                                }
+                            ],
+                        attributes: ['quantity']
+                    },
+                    {
+                        model: OrganizationCustomer,
+                        as: 'organization'
+                    }
+                ],
+            attributes:
+            {
+                include:
+                    [
+
+                        [
+                            Sequelize.literal(`CONCAT(account.firstName, ' ', account.lastName)`), 'fullName'
+                        ],
+                        [
+                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                        ],
+                        [
+                            Sequelize.literal(`organizationName`), 'organizationName'
+                        ]
+                    ]
+            },
+
+
+            group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
+            raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
+        });
+
+
+        res.json({
+            title: "all Orders list",
+            orders_list: orders
+        });
+    } catch (error) {
+        // Обработка ошибок
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching orders' });
+    }
+});
+
+
 
 // Display detail page for a specific book.
 exports.user_order_detail = asyncHandler(async (req, res, next) => {
@@ -272,10 +297,10 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                                 {
                                     model: PriceDefinition,
                                     as: 'price',
-                                    attributes: 
-                                    [
-                                        'priceAccess', 'priceBooklet'
-                                    ]
+                                    attributes:
+                                        [
+                                            'priceAccess', 'priceBooklet'
+                                        ]
                                 }
                             ],
                         attributes: ['quantity']
@@ -289,12 +314,15 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                             Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
 
-                        
+
                     ]
             },
         }),
         TitleOrders.findAll({
-            where: { orderId: req.params.orderId },
+            where:
+            {
+                orderId: req.params.orderId
+            },
             include:
                 [
                     {
@@ -305,7 +333,10 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes: ['priceAccess', 'priceBooklet']
+                        attributes:
+                            [
+                                'priceAccess', 'priceBooklet'
+                            ]
                     }
                 ],
             attributes:
@@ -346,6 +377,21 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             include:
                 [
                     {
+                        model: TitleOrders, // Добавляем модель TitleOrders
+                        include:
+                            [
+                                {
+                                    model: PriceDefinition,
+                                    as: 'price',
+                                    attributes:
+                                        [
+                                            'priceAccess', 'priceBooklet'
+                                        ]
+                                }
+                            ],
+                        attributes: ['quantity']
+                    },
+                    {
                         model: OrganizationCustomer,
                         as: 'organization',
                         attributes: ['organizationName']
@@ -360,6 +406,9 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             {
                 include:
                     [
+                        [
+                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                        ],
                         [
                             Sequelize.literal(`name`), 'payeeName'
                         ],
@@ -384,11 +433,11 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes: 
-                        [
-                            'priceAccess', 
-                            'priceBooklet'
-                        ]
+                        attributes:
+                            [
+                                'priceAccess',
+                                'priceBooklet'
+                            ]
                     }
                 ],
             attributes:
@@ -396,7 +445,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                 include:
                     [
                         [
-                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
                         ],
                         [
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
@@ -442,10 +491,15 @@ exports.user_order_create_post = [
         const priceDefinition = await PriceDefinition.findOne({
             where: { productId: req.body.productId }
         });
+
+
         const productId = req.body.productId;
-        const accessType = req.body.accessType;
         const generation = req.body.generation;
-        const addBooklet = req.body.addBooklet;
+        const accessType = req.body.accessType;
+        const addBooklet = req.body.addBooklet
+        if (addBooklet === 1) {
+            accessType = null
+        }
         const quantity = req.body.quantity;
         const payeeId = req.body.payeeId;
         const accountId = req.params.accountId;
@@ -461,13 +515,30 @@ exports.user_order_create_post = [
 
             const status = 'Черновик депозита';
 
-            const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
+            const order = await Order.create(
+                {
+                    status: status,
+                    accountId: accountId,
+                    organizationCustomerId: organizationCustomerId.id,
+                    payeeId: payeeId
+                }
+            ).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');
             }
 
 
-            await TitleOrders.create({ productId: productId, orderId: order.id, accessType: accessType, generation: generation, addBooklet: addBooklet, quantity: quantity, priceDefId: priceDefinition.id })
+            await TitleOrders.create(
+                {
+                    productId: productId,
+                    orderId: order.id,
+                    accessType: accessType,
+                    generation: generation,
+                    addBooklet: addBooklet,
+                    quantity: quantity,
+                    priceDefId: priceDefinition.id
+                }
+            )
                 .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
                 .catch(err => {
                     console.log(err);
@@ -480,13 +551,29 @@ exports.user_order_create_post = [
 
         else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
             const status = 'Черновик';
-            const order = await Order.create({ status: status, accountId: accountId, organizationCustomerId: organizationCustomerId.id, payeeId: payeeId }).catch(err => console.log(err));
+            const order = await Order.create(
+                {
+                    status: status,
+                    accountId: accountId, organizationCustomerId: organizationCustomerId.id,
+                    payeeId: payeeId
+                }
+            ).catch(err => console.log(err));
             if (!order) {
                 return res.status(500).send('ERROR CREATING ORDER');
             }
 
 
-            await TitleOrders.create({ productId: productId, orderId: order.id, accessType: accessType, generation: generation, addBooklet: addBooklet, quantity: quantity, priceDefId: priceDefinition.id })
+            await TitleOrders.create(
+                {
+                    productId: productId,
+                    orderId: order.id,
+                    accessType: accessType,
+                    generation: generation,
+                    addBooklet: addBooklet,
+                    quantity: quantity,
+                    priceDefId: priceDefinition.id
+                }
+            )
                 .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
                 .catch(err => {
                     console.log(err);
@@ -494,8 +581,26 @@ exports.user_order_create_post = [
                 });
         }
         else {
-            const order = await Order.findOne({ where: { status: 'Черновик' }, raw: true });
-            await TitleOrders.create({ productId: productId, orderId: order.id, accessType: accessType, generation: generation, addBooklet: addBooklet, quantity: quantity, priceDefId: priceDefinition.id })
+            const order = await Order.findOne(
+                {
+                    where:
+                    {
+                        status: 'Черновик'
+                    },
+                    raw: true
+                }
+            );
+            await TitleOrders.create(
+                {
+                    productId: productId,
+                    orderId: order.id,
+                    accessType: accessType,
+                    generation: generation,
+                    addBooklet: addBooklet,
+                    quantity: quantity,
+                    priceDefId: priceDefinition.id
+                }
+            )
                 .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
                 .catch(err => {
                     console.log(err);

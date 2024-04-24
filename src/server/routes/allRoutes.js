@@ -7,6 +7,7 @@ const payees_controller = require("../controllers/payeeController");
 const priceDefinition_controller = require("../controllers/priceDefinitionController");
 const titleOrders_controller = require("../controllers/titleOrdersController");
 const organizationCustomer_controller = require("../controllers/organizationCustomerController")
+const deposit_controller = require("../controllers/depositController")
 
 /*
 ============================================================
@@ -65,10 +66,6 @@ router.post("/:accountId/orders/newOrder", orders_controller.user_order_create_p
  */
 router.put("/:accountId/orders/update", orders_controller.user_draftOrder_update_put)
 
-/**
- * Запрос PUT для обновления черновика заказа от лица админа
- */
-router.put("/:accountId/orders/update", orders_controller.user_draftOrder_update_put)
 
 /**
  * Запрос GET для получения всех активных заказов пользователя
@@ -88,16 +85,29 @@ router.get("/:accountId/orders/finished", orders_controller.user_finished_orders
 router.get("/:accountId/orders/all", orders_controller.admin_orders_list);
 
 /**
+ * Запрос GET для получения всех архивных заказов от лица админа
+ */
+router.get("/:accountId/orders/archive", orders_controller.admin_archivedOrders_list);
+
+
+/**
  * Запрос GET для получения деталей (Всех TitleOrders и OrganizationCustomer) для выбранного заказа от лица админа
  * @param orderId - id заказа 
  */
 router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
+
+
+/**
+ * Запрос PUT для обновления черновика заказа от лица админа
+ */
+router.put("/:accountId/orders/update/:orderId", orders_controller.admin_order_update_put)
 
 /**
  * Запрос GET для получения деталей (Всех TitleOrders) для выбранного заказа
  * @param orderId - id заказа
  */
 router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
+
 
 
 
@@ -223,5 +233,13 @@ router.get("/:accountId/organizationsCustomer/newOrganizationCustomer", organiza
 router.post("/:accountId/organizationsCustomer/newOrganizationCustomer",  organizationCustomer_controller.organization_create_post);
 
 
+
+/*
+============================================================
+ЗАПРОСЫ ДЛЯ ДЕПОЗИТОВ
+============================================================
+*/
+
+router.get("/:accountId/deposits", deposit_controller.deposits_list);
 
 module.exports = router;
