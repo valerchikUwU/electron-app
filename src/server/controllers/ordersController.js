@@ -40,7 +40,12 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         ],
         attributes: {
             include: [
-                [Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM']
+                [
+                    Sequelize.literal(`SUM(quantity * priceAccess)`), 'SUM'
+                ],
+                [
+                    Sequelize.literal(`organizationName`), 'organizationName'
+                ]
             ]
         },
         group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
