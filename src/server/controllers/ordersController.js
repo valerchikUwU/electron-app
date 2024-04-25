@@ -57,7 +57,7 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         raw: true
     });
 
-
+9
     res.json({
         title: "active Orders list",
         orders_list: activeOrders,
@@ -495,13 +495,9 @@ exports.user_order_create_post = [
 
         const productId = req.body.productId;
         const generation = req.body.generation;
-        const accessType = req.body.accessType;
+        const accessType = req.body.addBooklet === true ? null : req.body.accessType;
         const addBooklet = req.body.addBooklet
-        if (addBooklet === 1) {
-            accessType = null
-        }
         const quantity = req.body.quantity;
-        const payeeId = req.body.payeeId;
         const accountId = req.params.accountId;
 
 
@@ -519,8 +515,7 @@ exports.user_order_create_post = [
                 {
                     status: status,
                     accountId: accountId,
-                    organizationCustomerId: organizationCustomerId.id,
-                    payeeId: payeeId
+                    organizationCustomerId: organizationCustomerId.id
                 }
             ).catch(err => console.log(err));
             if (!order) {
@@ -550,12 +545,13 @@ exports.user_order_create_post = [
 
 
         else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
+
             const status = 'Черновик';
             const order = await Order.create(
                 {
                     status: status,
-                    accountId: accountId, organizationCustomerId: organizationCustomerId.id,
-                    payeeId: payeeId
+                    accountId: accountId, 
+                    organizationCustomerId: organizationCustomerId.id,
                 }
             ).catch(err => console.log(err));
             if (!order) {

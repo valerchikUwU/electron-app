@@ -51,7 +51,7 @@ async function syncModels() {
   try {
      await Role.sync();
      await Account.sync();
-     await Payee.sync();
+     await Payee.sync({ alter: true });
      await ProductType.sync();
      await OrganizationCustomer.sync();
      await Product.sync();

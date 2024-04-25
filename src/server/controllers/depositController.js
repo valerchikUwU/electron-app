@@ -5,24 +5,44 @@ const { where, Sequelize } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const Product = require('../../models/product');
+const PriceDefinition = require('../../models/priceDefinition');
 
 
 exports.deposits_list = asyncHandler(async (req, res, next) => {
     const organizations = await OrganizationCustomer.findAll({
-        include: [
+        include: 
+        [
             {
                 model: Order,
-                include: [
+                include: 
+                [
                     {
                         model: TitleOrders,
-                        include: [
+                        include: 
+                        [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes: 
+                                [
+                                    'priceAccess',
+                                    'priceBooklet'
+                                ]
+                            },
                             {
                                 model: Product,
-                                attributes: ['productTypeId'],
+                                attributes: 
+                                [
+                                    'productTypeId'
+                                ],
                                 as: 'product'
                             }
                         ],
-                        attributes: ['quantity']
+                        attributes: 
+                        [
+                            'quantity', 
+                            'addBooklet'
+                        ],
                     }
                 ],
                 as: 'orders'
@@ -31,10 +51,16 @@ exports.deposits_list = asyncHandler(async (req, res, next) => {
         attributes: {
             include: [
                 [
-                    Sequelize.literal(`(SUM(CASE WHEN productTypeId = 4 THEN quantity))-(SUM(CASE WHEN productTypeId <> 4 THEN quantity))`), 'allDeposits'
+                    Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 AND addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                ],
+                
+                [
+                    Sequelize.literal(`CASE WHEN productTypeId = 4 THEN (SUM (quantity)) END`), 'allDeposits'
                 ]
             ]
-        }
+        },
+        group: ['OrganizationCustomer.id'],
+        raw: true
     });
     
     res.json({

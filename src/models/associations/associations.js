@@ -47,7 +47,7 @@ Payee.hasMany(Order, {
    foreignKey: {
       name: 'payeeId',
       type: DataTypes.UUID, // Использование UUID в качестве типа ключа
-      allowNull: false, // Внешний ключ не может быть NULL
+      allowNull: true, // Внешний ключ не может быть NULL
    },
    as: 'orders'
 });
