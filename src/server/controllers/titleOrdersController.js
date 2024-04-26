@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const { and } = require('sequelize');
+const PriceDefinition = require('../../models/priceDefinition');
 
 
 
@@ -73,8 +74,11 @@ exports.user_titleOrder_update_put = [
                         if (title.accessType)
                             oldTitle.accessType = title.accessType;
                     }
-                    if (title.productId)
+                    if (title.productId){
                         oldTitle.productId = title.productId;
+                        const priceDef = await PriceDefinition.findOne({where: {productId: title.productId}});
+                        oldTitle.priceDefId = priceDef.id
+                    }
 
                     if (title.generation)
                         oldTitle.generation = title.generation;
@@ -102,7 +106,7 @@ exports.title_delete = asyncHandler(async (req, res, next) => {
         res.status(404).send('Title not found');
     }
 
-    await TitleOrders.destroy(req.params.titleId);
+    await TitleOrders.destroy({where: {id: req.params.titleId}});
     res.status(200).send('Title destroyed');
 
 });
@@ -178,7 +182,7 @@ exports.admin_titleOrder_update_put = [
                 billNumber: req.body.billNumber,
                 _id: req.params.orderId
             });
-            
+
             const oldOrder = await Order.findByPk(req.params.orderId);
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = order.status;

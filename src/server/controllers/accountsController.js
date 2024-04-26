@@ -138,7 +138,16 @@ exports.account_create_post = [
 // ТУТ ДОДЕЛАТЬ
 exports.account_update_get = asyncHandler(async (req, res, next) => {
     const [account, allOrganizations] = await Promise.all([
-        Account.findByPk(req.params.accountFocusId, { include: [{ model: OrganizationCustomer, as: 'organizations' }] }),
+        Account.findByPk(req.params.accountFocusId, 
+            { 
+                include: 
+                [
+                    { 
+                        model: OrganizationCustomer,
+                        as: 'organizations' 
+                    }
+                ] 
+            }),
         OrganizationCustomer.findAll()
     ]);
 
@@ -158,7 +167,7 @@ exports.account_update_get = asyncHandler(async (req, res, next) => {
 });
 
 
-exports.account_update_post = [
+exports.account_update_put = [
 
 
     // Validate and sanitize fields.
@@ -218,7 +227,6 @@ exports.account_update_post = [
 
             await oldAccount.save();
 
-            // Перенаправляем на страницу с деталями продукта.
             res.redirect("http://localhost:3000/api/:accountdId/accounts");
         }
     }),

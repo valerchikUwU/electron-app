@@ -57,7 +57,7 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         raw: true
     });
 
-9
+    9
     res.json({
         title: "active Orders list",
         orders_list: activeOrders,
@@ -135,11 +135,7 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                     {
                         model: Account,
                         as: 'account',
-                        attributes:
-                            [
-                                'firstName',
-                                'lastName'
-                            ]
+                        attributes: [],
                     },
                     {
                         model: TitleOrders, // Добавляем модель TitleOrders
@@ -148,17 +144,15 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                                 {
                                     model: PriceDefinition,
                                     as: 'price',
-                                    attributes:
-                                        [
-                                            'priceAccess', 'priceBooklet'
-                                        ]
+                                    attributes:  []
                                 }
                             ],
-                        attributes: ['quantity']
+                        attributes: []
                     },
                     {
                         model: OrganizationCustomer,
-                        as: 'organization'
+                        as: 'organization',
+                        attributes: []
                     }
                 ],
             attributes:
@@ -177,6 +171,9 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                         ],
                         [
                             Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
+                        ],
+                        [
+                            Sequelize.literal(`organizationList`), 'organizationList'
                         ]
                     ]
             },
@@ -355,7 +352,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
         })
     ]);
 
-    if (order === null) {
+    if (order.id === null) {
         // No results.
         const err = new Error("order not found");
         err.status = 404;
@@ -483,6 +480,10 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
 
 exports.user_order_create_post = [
 
+    body("quantity")
+    .isInt({ min: 1})
+    .withMessage('Должно быть больше 0')
+    .escape(),
 
 
     asyncHandler(async (req, res, next) => {
@@ -550,7 +551,7 @@ exports.user_order_create_post = [
             const order = await Order.create(
                 {
                     status: status,
-                    accountId: accountId, 
+                    accountId: accountId,
                     organizationCustomerId: organizationCustomerId.id,
                 }
             ).catch(err => console.log(err));
@@ -638,15 +639,15 @@ exports.admin_order_create_post = [
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("dispatchDate")
-        .optional({ checkFalsy: true })
-        .trim()
-        .escape(),
     body("status", "Status must not be empty.")
         .trim()
         .isLength({ min: 1 })
         .escape(),
     body("billNumber")
+        .optional({ checkFalsy: true })
+        .trim()
+        .escape(),
+    body("payeeId")
         .optional({ checkFalsy: true })
         .trim()
         .escape(),
@@ -660,9 +661,10 @@ exports.admin_order_create_post = [
         const order = new Order({
             accountId: req.body.accountId,
             organizationCustomerId: req.body.organizationCustomerId,
-            dispatchDate: req.body.dispatchDate,
+            dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
             status: req.body.status,
             billNumber: req.body.billNumber,
+            payeeId: req.body.payeeId
         });
 
         if (!errors.isEmpty()) {
@@ -724,9 +726,13 @@ exports.user_draftOrder_update_put = [
             return;
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
+            if(oldOrder.status !== 'Черновик'){
+                res.status(400).send('Редактировать можно только черновик')
+            }
             oldOrder.organizationCustomerId = order.organizationCustomerId;
+            oldOrder.status = 'Активный'
             await oldOrder.save();
-            res.redirect('http://localhost:3000/api/:accountId/orders');
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders`);
         }
     }),
 ];
@@ -766,6 +772,7 @@ exports.admin_order_update_put = [
             organizationCustomerId: req.body.organizationCustomerId,
             status: req.body.status,
             billNumber: req.body.billNumber,
+            dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
             _id: req.params.orderId
         });
 
@@ -848,20 +855,20 @@ async function ifProductTypeDeposit(productId) {
 }
 
 
-async function createTitleOrder(productId, orderId, accessType, generation, addBooklet, quantity, priceDefId) {
-    try {
-        await TitleOrders.create({
-            productId: productId,
-            orderId: orderId,
-            accessType: accessType,
-            generation: generation,
-            addBooklet: addBooklet,
-            quantity: quantity,
-            priceDefId: priceDefId
-        });
-        return true;
-    } catch (err) {
-        console.error('ERROR CREATING TITLE:', err);
-        return false;
-    }
-}
+// async function createTitleOrder(productId, orderId, accessType, generation, addBooklet, quantity, priceDefId) {
+//     try {
+//         await TitleOrders.create({
+//             productId: productId,
+//             orderId: orderId,
+//             accessType: accessType,
+//             generation: generation,
+//             addBooklet: addBooklet,
+//             quantity: quantity,
+//             priceDefId: priceDefId
+//         });
+//         return true;
+//     } catch (err) {
+//         console.error('ERROR CREATING TITLE:', err);
+//         return false;
+//     }
+// }

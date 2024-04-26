@@ -15,17 +15,14 @@ const deposit_controller = require("../controllers/depositController")
 ============================================================
 */
 
-/** 
- * Запрос GET для получения формы создания продукта 
- * @param productId - id продукта 
+/**
+ * Запрос GET для получения всех товаров определенного типа
+ * @param typeId - Тип продукта
  */
-router.get("/:accountId/products/newProduct", products_controller.product_create_get);
+router.get("/:accountId/productsByType/:typeId", products_controller.products_list);
 
-/** 
- * Запрос POST для создания нового продукта 
- * @param productId - id продукта 
- */
-router.post("/:accountId/products/newProduct", products_controller.product_create_post);
+
+
 
 /** 
  * Запрос GET для получения формы обновления продукта 
@@ -39,11 +36,7 @@ router.get("/:accountId/products/:productId/update", products_controller.product
   */
 router.put("/:accountId/products/:productId/update", products_controller.product_update_put);
 
-/**
- * Запрос GET для получения всех товаров определенного типа
- * @param typeId - Тип продукта
- */
-router.get("/:accountId/productsByType/:typeId", products_controller.products_list);
+
 
 
 
@@ -56,15 +49,17 @@ router.get("/:accountId/productsByType/:typeId", products_controller.products_li
 
 
 
+
+
 /**
  * Запрос POST для создания заказа от лица пользователя
  */
 router.post("/:accountId/orders/newOrder", orders_controller.user_order_create_post);
 
 /**
- * Запрос PUT для обновления черновика заказа от лица пользователя
+ * Запрос PUT для обновления черновика заказа от лица пользователя (НА СТРАНИЦЕ "В РАБОТЕ")
  */
-router.put("/:accountId/orders/update", orders_controller.user_draftOrder_update_put)
+router.put("/:accountId/orders/:orderId/update", orders_controller.user_draftOrder_update_put)
 
 
 /**
@@ -91,16 +86,16 @@ router.get("/:accountId/orders/archive", orders_controller.admin_archivedOrders_
 
 
 /**
+ * Запрос PUT для обновления черновика заказа от лица админа
+ */
+router.put("/:accountId/orders/admin/:orderId/update", orders_controller.admin_order_update_put)
+
+/**
  * Запрос GET для получения деталей (Всех TitleOrders и OrganizationCustomer) для выбранного заказа от лица админа
  * @param orderId - id заказа 
  */
 router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_detail);
 
-
-/**
- * Запрос PUT для обновления черновика заказа от лица админа
- */
-router.put("/:accountId/orders/update/:orderId", orders_controller.admin_order_update_put)
 
 /**
  * Запрос GET для получения деталей (Всех TitleOrders) для выбранного заказа
@@ -118,18 +113,30 @@ router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
 ============================================================
 */
 
-
-/**
- * Запрос POST для обновления ВСЕХ! TitleOrder в заказе
- * @param orderId - id заказа
- */
-router.put("/:accountId/orders/update/:orderId", titleOrders_controller.user_titleOrder_update_put);
-
 /**
  * Запрос DELETE для удаления ОДНОГО! TitleOrder в заказе
  * @param orderId - id заказа
+ * @param titleId - id наименования
  */
-router.delete("/:accountId/orders/delete/:orderId", titleOrders_controller.title_delete)
+router.delete("/:accountId/orders/:orderId/delete/:titleId", titleOrders_controller.title_delete)
+
+
+/**
+ * Запрос PUT для обновления ВСЕХ! TitleOrder в заказе от лица пользователя
+ * @param orderId - id заказа
+ */
+router.put("/:accountId/orders/:orderId/update", titleOrders_controller.user_titleOrder_update_put);
+
+
+
+/**
+ * Запрос PUT для обновления ВСЕХ! TitleOrder в заказе от лица админа
+ * @param orderId - id заказа
+ */
+router.put("/:accountId/orders/admin/update/:orderId", titleOrders_controller.admin_titleOrder_update_put);
+
+
+
 
 
 
@@ -195,13 +202,35 @@ router.put("/:accountId/prices/:priceDefId/update", priceDefinition_controller.p
 
 
 /**
- * Запрос GET для всех пользователей
+ * Запрос GET для получения формы обновления аккаунта
+ * @param accountFocusId - id выбранного пользователя
+ */
+router.get("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_get); 
+
+/**
+ * Запрос PUT для выбранного аккаунта
+ * @param accountFocusId - id выбранного пользователя
+ */
+router.put("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_put); 
+
+/**
+ * Запрос GET для всех пользователей от лица суперАдмина
+ */
+router.get("/:accountId/superAdmin/accounts", accounts_controller.superAdmin_accounts_list); 
+
+
+/**
+ * Запрос GET для всех пользователей от лица админа
  */
 router.get("/:accountId/accounts", accounts_controller.accounts_list); 
+
+
 /**
  * Запрос GET для получения формы создания нового аккаунта
  */
 router.get("/:accountId/newAccount", accounts_controller.account_create_get);
+
+
 /**
  * Запрос POST для создания нового аккаунта
  */
@@ -240,6 +269,32 @@ router.post("/:accountId/organizationsCustomer/newOrganizationCustomer",  organi
 ============================================================
 */
 
+
+/**
+ * Запрос GET для получения формы создания депозита
+ * @param organizationCustomerId - id организации
+ */
+router.get("/:acountId/deposits/:organizationCustomerId/newDeposit", deposit_controller.deposit_create_get);
+
+/**
+ * Запрос POST для добавления депозита
+ * @param organizationCustomerId - id организации
+ */
+router.post("/:acountId/deposits/:organizationCustomerId/newDeposit", deposit_controller.deposit_create_post);
+
+
+/**
+ * Запрос GET для получения деталей депозитов для конкретной организации
+ * @param organizationCustomerId - id организации
+ */
+router.get("/:acountId/deposits/:organizationCustomerId", deposit_controller.deposits_details);
+
+
+/**
+ * Запрос GET для получения всех остатков на депозитах
+ */
 router.get("/:accountId/deposits", deposit_controller.deposits_list);
+
+
 
 module.exports = router;

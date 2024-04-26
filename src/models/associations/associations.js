@@ -127,7 +127,7 @@ Account.hasMany(Order, {
    foreignKey: {
       name: 'accountId',
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
    },
    as: 'orders'
 });

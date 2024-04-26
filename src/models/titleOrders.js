@@ -17,7 +17,7 @@ const TitleOrders = sequelize.define('TitleOrders', {
    },
    generation: {
       type: DataTypes.ENUM('Первое поколение', 'Второе поколение'),
-      allowNull: false
+      allowNull: true
    },
 
 

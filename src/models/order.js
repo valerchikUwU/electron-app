@@ -28,8 +28,13 @@ const Order = sequelize.define('Order', {
     billNumber: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+
+    createdBySupAdm: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
-// ДОБАВИТЬ ОРГАНИЗАЦИЮ 
 
 });
 

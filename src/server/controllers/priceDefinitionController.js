@@ -8,20 +8,20 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
     const pricesInit = await PriceDefinition.findAll({
         include: [{
             model: Product,
-            where: {productTypeId: 1}
-            
+            where: { productTypeId: 1 }
+
         }]
     });
     const pricesMain = await PriceDefinition.findAll({
         include: [{
             model: Product,
-            where: {productTypeId: 2}
+            where: { productTypeId: 2 }
         }]
     });
     const pricesForEmployers = await PriceDefinition.findAll({
         include: [{
             model: Product,
-            where: {productTypeId: 3}
+            where: { productTypeId: 3 }
         }]
     });
     res.json({
@@ -34,39 +34,39 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
 );
 
 exports.price_create_get = asyncHandler(async (req, res, next) => {
-    // Используем Promise.all для параллельного выполнения запросов к базе данных.
-    // В данном случае, выполняем запрос к таблице ProductType,
-    // чтобы получить все типы продуктов, отсортированные по id и name.
-    const [allProducts] = await Promise.all([
-        Product.findAll({ order: [['name']] })
+    const priceDef = PriceDefinition.findByPk(req.params.priceDefId)
+    const [allProducts, thisProduct] = await Promise.all([
+        Product.findAll({ order: [['name']] }),
+        Product.findOne({ where: { id: priceDef.productId } })
     ]);
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
         title: "Create priceDefinition",
-        allProducts: allProducts
+        allProducts: allProducts,
+        thisProduct: thisProduct
     });
 });
 
 exports.price_create_post = [
-    (req, res, next) => {
-        if (!Array.isArray(req.body.allProducts)) {
-            req.body.allProducts =
-                typeof req.body.allProducts === "undefined" ? [] : [req.body.allProducts];
-        }
-        next();
-    },
 
-
+    body("name", "name must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("abbreviation", "abbreviation must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("productTypeId")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
     body("priceAccess", "priceAccess must not be empty.")
         .trim()
         .isLength({ min: 1 })
         .escape(),
     body("priceBooklet", "priceBooklet must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("productId")
         .trim()
         .isLength({ min: 1 })
         .escape(),
@@ -77,10 +77,17 @@ exports.price_create_post = [
         const errors = validationResult(req);
 
         // const formattedDate = format(new Date(), 'dd:MM:yyyy');
+        const product = new Product({
+            name: req.body.name,
+            abbreviation: req.body.abbreviation,
+            productTypeId: req.body.productTypeId
+        })
+
+
         const price = new PriceDefinition({
             priceAccess: req.body.priceAccess,
             priceBooklet: req.body.priceBooklet,
-            productId: req.body.productId,
+            productId: product.id,
             activationDate: new Date()
         });
 
@@ -99,7 +106,8 @@ exports.price_create_post = [
                 errors: errors.array(),
             });
         } else {
-            // Data from form is valid. Save product.
+
+            await product.save();
             await price.save();
             res.redirect('http://localhost:3000/api/:accountId/prices');
         }
@@ -130,8 +138,14 @@ exports.price_update_get = asyncHandler(async (req, res, next) => {
 
 exports.price_update_put = [
 
-
-    // Validate and sanitize fields.
+    body("name", "name must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("abbreviation", "abbreviation must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
     body("priceAccess", "priceAccess must not be empty.")
         .trim()
         .isLength({ min: 1 })
@@ -144,12 +158,18 @@ exports.price_update_put = [
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
 
+
+
         const price = new PriceDefinition({
             priceAccess: req.body.priceAccess,
             priceBooklet: req.body.priceBooklet,
             id: req.body.priceDefId
+        });
+
+        const product = new Product({
+            name: req.body.name,
+            abbreviation: req.body.abbreviation
         })
-        console.log(price)
 
         if (!errors.isEmpty()) {
 
