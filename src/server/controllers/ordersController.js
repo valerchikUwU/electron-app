@@ -881,5 +881,3 @@ async function ifProductTypeDeposit(productId) {
 //         return false;
 //     }
 // }
-
-export { getOrganizationList };
