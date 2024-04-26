@@ -720,7 +720,7 @@ exports.user_draftOrder_update_put = [
             where: { organizationName: organizationName }
         });
         const order = new Order({
-            organizationCustomerId: organizationCustomerId,
+            organizationCustomerId: organizationCustomerId.id,
             _id: req.params.orderId
         });
 
