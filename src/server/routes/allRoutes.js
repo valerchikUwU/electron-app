@@ -52,7 +52,8 @@ router.put("/:accountId/orders/:orderId/update", orders_controller.user_draftOrd
  * Запрос GET для получения всех активных заказов пользователя
  */
 
-router.put("/:accountId/orders", orders_controller.user_active_orders_list)
+router.get("/:accountId/orders", orders_controller.user_active_orders_list)
+
 
 
 /**
@@ -89,7 +90,6 @@ router.get("/:accountId/orders/admin/:orderId", orders_controller.admin_order_de
  * @param orderId - id заказа
  */
 router.get("/:accountId/orders/:orderId", orders_controller.user_order_detail);
-
 
 
 
