@@ -5,6 +5,9 @@ const CommisionReciever = require('../../models/commisionReceiver');
 const AccrualRule = require('../../models/accrualRule');
 const { Sequelize } = require('sequelize');
 const Order = require('../../models/order');
+const TitleOrders = require('../../models/titleOrders');
+const PriceDefinition = require('../../models/priceDefinition');
+const Product = require('../../models/product');
 
 
 
@@ -59,12 +62,11 @@ exports.commisionReciever_rules_details = asyncHandler(async (req, res, next) =>
 
 
 exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) => {
-    const [commisionReceiver, orders] = await Promise.all([
+    const [commisionReceiver] = await Promise.all([
         CommisionReciever.findByPk(req.params.commisionRecieverId),
         Order.findAll({
             where:
             {
-                organizationCustomerId: req.params.organizationCustomerId,
                 status:
                 {
                     [Op.notIn]:
@@ -106,7 +108,7 @@ exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) 
                         ],
 
                         [
-                            Sequelize.literal(`CASE WHEN productTypeId = 4 THEN (quantity*1) END `), 'Deposit'
+                            Sequelize.literal(`CASE WHEN productTypeId = 4 THEN (quantity*1) END `), 'Postyplenie'
                         ],
                         [
                             Sequelize.literal(`billNumber`), 'billNumber'
@@ -122,15 +124,14 @@ exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) 
 
     if (organization.id === null) {
         // No results.
-        const err = new Error("organization not found");
+        const err = new Error("Получатель комиссии не найден!");
         err.status = 404;
         return next(err);
     }
 
     res.json({
-        title: "deposits details",
-        organization: organization,
-        orders: orders,
+        title: "balance details",
+        commisionReceiver: commisionReceiver
     });
 });
 

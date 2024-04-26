@@ -708,17 +708,19 @@ exports.user_draftOrder_update_put = [
 
     // Validate and sanitize fields.
 
-    body("organizationCustomerId", "organizationCustomerId must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
+    body("organizationName")
+        .if(body("organizationName").exists())
         .escape(),
 
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
-
+        const organizationName = req.body.organizationName;
+        const organizationCustomerId = await OrganizationCustomer.findOne({
+            where: { organizationName: organizationName }
+        });
         const order = new Order({
-            organizationCustomerId: req.body.organizationCustomerId,
+            organizationCustomerId: organizationCustomerId,
             _id: req.params.orderId
         });
 
