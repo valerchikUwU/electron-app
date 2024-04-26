@@ -109,9 +109,6 @@ exports.products_list = asyncHandler(async (req, res, next) => {
         {
             include:
                 [
-                    [
-                        Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 AND addBooklet = TRUE THEN quantity * priceBooklet WHEN productTypeId <> 4 AND addBooklet = FALSE THEN quantity * priceAccess END)`), 'SUM'
-                    ],
 
                     [
                         Sequelize.literal(`SUM(CASE WHEN productTypeId = 4 THEN (quantity*1) END) `), 'allDeposits'
@@ -151,8 +148,6 @@ async function getOrganizationList(accountId) {
           }
       });
       if (account) {
-          // Предполагаем, что organizationList уже является JSON-массивом
-          // Мы можем напрямую обращаться к его элементам
           const organizationsList = account.organizationList;
           return organizationsList;
       } else {

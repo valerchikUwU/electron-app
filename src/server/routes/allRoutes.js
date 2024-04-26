@@ -8,6 +8,14 @@ const priceDefinition_controller = require("../controllers/priceDefinitionContro
 const titleOrders_controller = require("../controllers/titleOrdersController");
 const organizationCustomer_controller = require("../controllers/organizationCustomerController")
 const deposit_controller = require("../controllers/depositController")
+const { defineAbilitiesFor } = require('../../utils/accessPolitics');
+const Account = require("../../models/account");
+
+async function getAccountById(accountId) {
+  const account = await Account.findOne({ where: { id: accountId } });
+  return account;
+}
+
 
 /*
 ============================================================
@@ -49,7 +57,20 @@ router.put("/:accountId/orders/:orderId/update", orders_controller.user_draftOrd
 /**
  * Запрос GET для получения всех активных заказов пользователя
  */
-router.get("/:accountId/orders", orders_controller.user_active_orders_list);
+router.get('/:accountId/orders', async (req, res, next) => {
+  const account = await getAccountById(req.params.accountId);
+  if (!account) {
+    return res.status(404).send('Account not found');
+  }
+
+  const ability = defineAbilitiesFor(account);
+  if (ability.can('read', 'Order')) {
+    return orders_controller.user_active_orders_list(req, res, next);
+  }
+  else {
+    return res.status(403).send('Forbidden');
+  }
+});
 
 
 /**
@@ -173,7 +194,7 @@ router.get("/:accountId/prices/:priceDefId/update", priceDefinition_controller.p
  * Запрос POST для обновления прайс листа (PriceDefinition)
  * @param priceDefId - id прайс листа
  */
-router.put("/:accountId/prices/:priceDefId/update", priceDefinition_controller.price_update_put);  
+router.put("/:accountId/prices/:priceDefId/update", priceDefinition_controller.price_update_put);
 
 
 
@@ -189,36 +210,36 @@ router.put("/:accountId/prices/:priceDefId/update", priceDefinition_controller.p
  * Запрос GET для получения формы обновления аккаунта
  * @param accountFocusId - id выбранного пользователя
  */
-router.get("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_get); 
+router.get("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_get);
 
 /**
  * Запрос PUT для выбранного аккаунта
  * @param accountFocusId - id выбранного пользователя
  */
-router.put("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_put); 
+router.put("/:accountId/accounts/:accountFocusId/update", accounts_controller.account_update_put);
 
 /**
  * Запрос GET для всех пользователей от лица суперАдмина
  */
-router.get("/:accountId/superAdmin/accounts", accounts_controller.superAdmin_accounts_list); 
+router.get("/:accountId/superAdmin/accounts", accounts_controller.superAdmin_accounts_list);
 
 
 /**
  * Запрос GET для всех пользователей от лица админа
  */
-router.get("/:accountId/accounts", accounts_controller.accounts_list); 
+router.get("/:accountId/accounts", accounts_controller.accounts_list);
 
 
 /**
  * Запрос GET для получения формы создания нового аккаунта
  */
-router.get("/:accountId/newAccount", accounts_controller.account_create_get);
+router.get("/:accountId/newAccount", accounts_controller.account_organization_create_get);
 
 
 /**
  * Запрос POST для создания нового аккаунта
  */
-router.post("/:accountId/newAccount", accounts_controller.account_create_post);
+router.post("/:accountId/newAccount", accounts_controller.account_organization_create_post);
 
 
 
@@ -232,18 +253,6 @@ router.post("/:accountId/newAccount", accounts_controller.account_create_post);
  * Запрос GET для получения всех организаций(академий)
  */
 router.get("/:accountId/organizationsCustomer", organizationCustomer_controller.organizations_list);
-
-
-/**
- * Запрос GET для получения формы создания организации(академии)
- */
-router.get("/:accountId/organizationsCustomer/newOrganizationCustomer", organizationCustomer_controller.organization_create_get);
-
-
-/**
- * Запрос POST для создания новой организации(академии)
- */
-router.post("/:accountId/organizationsCustomer/newOrganizationCustomer",  organizationCustomer_controller.organization_create_post);
 
 
 

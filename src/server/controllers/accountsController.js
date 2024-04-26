@@ -5,7 +5,7 @@ const Account = require('../../models/account');
 const OrganizationCustomer = require('../../models/organizationCustomer');
 
 exports.accounts_list = asyncHandler(async (req, res, next) => {
-    const accounts = await Account.findAll({where: {roleId: 3}, raw: true })
+    const accounts = await Account.findAll({ where: { roleId: 3 }, raw: true })
     res.json({
         title: "accounts list",
         accounts: accounts
@@ -16,12 +16,12 @@ exports.accounts_list = asyncHandler(async (req, res, next) => {
 exports.superAdmin_accounts_list = asyncHandler(async (req, res, next) => {
     const accounts = await Account.findAll({
         where: {
-           roleId: {
-             [Op.or]: [2, 3]
-           }
+            roleId: {
+                [Op.or]: [2, 3]
+            }
         },
         raw: true
-       });
+    });
     res.json({
         title: "accounts list",
         accounts: accounts
@@ -48,7 +48,7 @@ exports.account_detail = asyncHandler(async (req, res, next) => {
     });
 });
 
-exports.account_create_get = asyncHandler(async (req, res, next) => {
+exports.account_organization_create_get = asyncHandler(async (req, res, next) => {
     // Используем Promise.all для параллельного выполнения запросов к базе данных.
     // В данном случае, выполняем запрос к таблице ProductType,
     // чтобы получить все типы продуктов, отсортированные по id и name.
@@ -65,7 +65,7 @@ exports.account_create_get = asyncHandler(async (req, res, next) => {
 
 
 
-exports.account_create_post = [
+exports.account_organization_create_post = [
 
     (req, res, next) => {
         if (!Array.isArray(req.body.organizationList)) {
@@ -87,20 +87,30 @@ exports.account_create_post = [
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("telegramId")
-        .optional({ checkFalsy: true }) // Поле является необязательным
-        .trim() // Удаляем пробелы в начале и конце строки
-        .isLength({ min: 1 }) // Проверяем, что длина строки больше 0, если поле предоставлено
-        .escape(), // Экранируем специальные символы
     body("organizationList.*").escape(),
+
 
 
 
     asyncHandler(async (req, res, next) => {
 
+
+
         const errors = validationResult(req);
-        
+
         // const formattedDate = format(new Date(), 'dd:MM:yyyy');
+        for (const organization of req.body.organizationList) {
+            if (await OrganizationCustomer.findOne({ where: { organizationName: organization }}) === null) {
+                const org = await OrganizationCustomer.create(
+                    {
+                        organizationName: organization
+                    }
+                )
+                org.save();
+            }
+
+        }
+
 
         const account = new Account({
             firstName: req.body.firstName,
@@ -139,15 +149,15 @@ exports.account_create_post = [
 // ТУТ ДОДЕЛАТЬ
 exports.account_update_get = asyncHandler(async (req, res, next) => {
     const [account, allOrganizations] = await Promise.all([
-        Account.findByPk(req.params.accountFocusId, 
-            { 
-                include: 
-                [
-                    { 
-                        model: OrganizationCustomer,
-                        as: 'organizations' 
-                    }
-                ] 
+        Account.findByPk(req.params.accountFocusId,
+            {
+                include:
+                    [
+                        {
+                            model: OrganizationCustomer,
+                            as: 'organizations'
+                        }
+                    ]
             }),
         OrganizationCustomer.findAll()
     ]);
