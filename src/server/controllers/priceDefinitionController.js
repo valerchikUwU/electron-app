@@ -159,16 +159,18 @@ exports.price_update_put = [
         const errors = validationResult(req);
 
 
+        const oldPrice = await PriceDefinition.findByPk(req.params.priceDefId);
 
         const price = new PriceDefinition({
             priceAccess: req.body.priceAccess,
             priceBooklet: req.body.priceBooklet,
-            id: req.body.priceDefId
+            _id: req.body.priceDefId
         });
 
         const product = new Product({
             name: req.body.name,
-            abbreviation: req.body.abbreviation
+            abbreviation: req.body.abbreviation,
+            _id: oldPrice.productId
         })
 
         if (!errors.isEmpty()) {
@@ -183,16 +185,19 @@ exports.price_update_put = [
             return;
         } else {
 
-            const oldPrice = await PriceDefinition.findByPk(req.params.priceDefId)
+            const oldProduct = await Product.findByPk(oldPrice.productId)
             // const formattedDate = format(new Date(), 'dd:MM:yyyy');
             oldPrice.priceAccess = price.priceAccess;
             oldPrice.priceBooklet = price.priceBooklet;
-            console.log(oldPrice)
+
+            oldProduct.name = product.name;
+            oldProduct.abbreviation = product.abbreviation;
             // Данные из формы валидны. Обновляем запись.
             await oldPrice.save();
+            await oldProduct.save();
 
             // Перенаправляем на страницу с деталями продукта.
-            res.redirect("http://localhost:3000/api/:accountId/prices");
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/prices`);
         }
     }),
 ];

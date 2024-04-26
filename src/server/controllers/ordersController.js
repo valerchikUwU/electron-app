@@ -144,7 +144,7 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                                 {
                                     model: PriceDefinition,
                                     as: 'price',
-                                    attributes:  []
+                                    attributes: []
                                 }
                             ],
                         attributes: []
@@ -481,9 +481,12 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
 exports.user_order_create_post = [
 
     body("quantity")
-    .isInt({ min: 1})
-    .withMessage('Должно быть больше 0')
-    .escape(),
+        .isInt({ min: 1 })
+        .withMessage('Должно быть больше 0')
+        .escape(),
+    body("organizationName")
+        .if(body("organizationName").exists())
+        .escape(),
 
 
     asyncHandler(async (req, res, next) => {
@@ -500,16 +503,17 @@ exports.user_order_create_post = [
         const addBooklet = req.body.addBooklet
         const quantity = req.body.quantity;
         const accountId = req.params.accountId;
+        const organizationName = req.body.organizationName
 
 
-        const organizationName = await getOrganizationCustomerName(accountId)
-        const organizationCustomerId = await OrganizationCustomer.findOne({
-            where: { organizationName: organizationName }
-        });
+
         const isDepositProduct = await ifProductTypeDeposit(productId);
         if (isDepositProduct) {
 
 
+            const organizationCustomerId = await OrganizationCustomer.findOne({
+                where: { organizationName: organizationName }
+            });
             const status = 'Черновик депозита';
 
             const order = await Order.create(
@@ -547,6 +551,11 @@ exports.user_order_create_post = [
 
         else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
 
+
+            const firstOrganizationName = await getFirstOrganizationCustomerName(accountId)
+            const organizationCustomerId = await OrganizationCustomer.findOne({
+                where: { organizationName: firstOrganizationName }
+            });
             const status = 'Черновик';
             const order = await Order.create(
                 {
@@ -726,7 +735,7 @@ exports.user_draftOrder_update_put = [
             return;
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
-            if(oldOrder.status !== 'Черновик'){
+            if (oldOrder.status !== 'Черновик') {
                 res.status(400).send('Редактировать можно только черновик')
             }
             oldOrder.organizationCustomerId = order.organizationCustomerId;
@@ -821,7 +830,7 @@ async function getOrganizationList(accountId) {
 
 
 
-async function getOrganizationCustomerName(accountId) {
+async function getFirstOrganizationCustomerName(accountId) {
     try {
         const account = await Account.findOne({
             where: {
@@ -872,3 +881,5 @@ async function ifProductTypeDeposit(productId) {
 //         return false;
 //     }
 // }
+
+export { getOrganizationList };

@@ -128,7 +128,7 @@ exports.account_create_post = [
             // Data from form is valid. Save product.
             await account.save();
             // res.send({ success: true });
-            res.redirect('http://localhost:3000/api/:accountId/accounts');
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/accounts`);
         }
     }),
 ];

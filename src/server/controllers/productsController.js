@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
 const ProductType = require('../../models/productType');
 const Product = require('../../models/product');
+const OrganizationCustomer = require('../../models/organizationCustomer');
+const Account = require('../../models/account');
 
 exports.products_list = asyncHandler(async (req, res, next) => {
   const productTypeId = parseInt(req.params.typeId, 10);
@@ -45,14 +47,83 @@ exports.products_list = asyncHandler(async (req, res, next) => {
       });
       break;
     case 4:
-      const productsDeposit = await Product.findAll({
+      const organizationsList = await getOrganizationList(req.params.accountId);
+      const [productsDeposit, organizations] = await Promise.all([
+      
+      await Product.findAll({
         where: { productTypeId: productTypeId },
         raw: true
-      });;
+      }),
+      await OrganizationCustomer.findAll({
+        where: 
+        {
+          organizationName: 
+          {
+            [Op.in]: organizationsList
+          }
+        },
+        include:
+            [
+                {
+                    model: Order,
+                    where: {
+                        status:
+                        {
+                            [Op.notIn]:
+                                [
+                                    'Получен',
+                                    'Черновик',
+                                    'Черновик депозита',
+                                    'Отменен'
+                                ]
+                        }
+                    },
+                    include:
+                        [
+                            {
+                                model: TitleOrders,
+                                include:
+                                    [
+                                        {
+                                            model: PriceDefinition,
+                                            attributes: [],
+                                            as: 'price'
+                                        },
+                                        {
+                                            model: Product,
+                                            attributes: [],
+                                            as: 'product'
+                                        }
+                                    ],
+                                attributes: [],
+                            }
+                        ],
+                    as: 'orders'
+                }
+            ],
+        attributes:
+        {
+            include:
+                [
+                    [
+                        Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 AND addBooklet = TRUE THEN quantity * priceBooklet WHEN productTypeId <> 4 AND addBooklet = FALSE THEN quantity * priceAccess END)`), 'SUM'
+                    ],
 
+                    [
+                        Sequelize.literal(`SUM(CASE WHEN productTypeId = 4 THEN (quantity*1) END) `), 'allDeposits'
+                    ]
+                ]
+        },
+        group: ['OrganizationCustomer.id'],
+        raw: true
+    })
+    ]);
+
+    
       res.json({
         title: "ProductsDeposit",
-        productsList: productsDeposit
+        productsList: productsDeposit,
+        organizations: organizations
       });
       break;
 
@@ -153,3 +224,25 @@ exports.product_update_put = [
 ];
 
 
+
+
+async function getOrganizationList(accountId) {
+  try {
+      const account = await Account.findOne({
+          where: {
+              id: accountId
+          }
+      });
+      if (account) {
+          // Предполагаем, что organizationList уже является JSON-массивом
+          // Мы можем напрямую обращаться к его элементам
+          const organizationsList = account.organizationList;
+          return organizationsList;
+      } else {
+          return null;
+      }
+  } catch (error) {
+      console.error('Error fetching org list:', error);
+      return null;
+  }
+}
