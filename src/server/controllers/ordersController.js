@@ -145,6 +145,11 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                                     model: PriceDefinition,
                                     as: 'price',
                                     attributes: []
+                                },
+                                {
+                                    model: Product,
+                                    attributes: [],
+                                    as: 'product'
                                 }
                             ],
                         attributes: []
@@ -170,7 +175,7 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
                             Sequelize.literal(`organizationName`), 'organizationName'
                         ],
                         [
-                            Sequelize.literal(`SUM(quantity)`), 'totalQuantity'
+                            Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 THEN (quantity*1) END)`), 'totalQuantity'
                         ],
                         [
                             Sequelize.literal(`organizationList`), 'organizationList'
@@ -632,13 +637,7 @@ exports.admin_order_create_get = asyncHandler(async (req, res, next) => {
 
 exports.admin_order_create_post = [
 
-    (req, res, next) => {
-        if (!Array.isArray(req.body.accounts)) {
-            req.body.accounts =
-                typeof req.body.accounts === "undefined" ? [] : [req.body.accounts];
-        }
-        next();
-    },
+    
 
     body("accountId", "Account must not be empty.")
         .trim()
@@ -693,7 +692,7 @@ exports.admin_order_create_post = [
             });
         } else {
             await order.save();
-            res.redirect('http://localhost:3000/api/:accountId/orders/all');
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders/all`);
         }
     }),
 ];

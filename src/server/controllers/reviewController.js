@@ -4,11 +4,19 @@ const { Sequelize, Op, fn, col } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const PriceDefinition = require('../../models/priceDefinition');
+const Product = require('../../models/product');
 
 
-exports.sells_list = asyncHandler(async (req, res, next) => {
-    const [orders] = await Promise.all([
-        Order.findAll({
+exports.review_details = asyncHandler(async (req, res, next) => {
+
+
+
+
+})
+
+
+async function getAllEarnings(){
+    const orders = Order.findAll({
             where:
             {
                 status:
@@ -30,6 +38,11 @@ exports.sells_list = asyncHandler(async (req, res, next) => {
                                     model: PriceDefinition,
                                     attributes: [],
                                     as: 'price'
+                                },
+                                {
+                                    model: Product,
+                                    attributes: [],
+                                    as: 'product'
                                 }
                             ],
                         attributes: []
@@ -40,10 +53,13 @@ exports.sells_list = asyncHandler(async (req, res, next) => {
                 include:
                     [
                         [
-                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                            Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 AND addBooklet = TRUE THEN quantity * priceBooklet WHEN productTypeId <> 4 AND addBooklet = FALSE THEN quantity * priceAccess END)`), 'SUM'
                         ],
                         [
-                            Sequelize.literal(`dispatchDate`), 'dispatchDate'
+                            Sequelize.literal(`SUM(CASE WHEN productTypeId <> 4 THEN (quantity*1) END)`), 'totalQuantity'
+                        ],
+                        [
+                            Sequelize.literal(`SUM(CASE WHEN productTypeId = 2 THEN (quantity*1) END)`), 'totalMainQuantity'
                         ]
                     ]
             },
@@ -51,12 +67,5 @@ exports.sells_list = asyncHandler(async (req, res, next) => {
             group: ['Order.id'],
             raw: true
         })
-    ]);
 
-
-
-    res.json({
-        title: "sells statistics",
-        orders: orders,
-    });
-});
+}

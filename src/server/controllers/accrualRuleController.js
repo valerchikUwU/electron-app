@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
+const { Sequelize, Op, fn, col } = require('sequelize');
 const AccrualRule = require('../../models/accrualRule');
 const Product = require('../../models/product');
 const ProductType = require('../../models/productType');
@@ -30,16 +31,12 @@ exports.accrualRule_create_post = [
         .escape()
         .optional({ checkFalsy: true }),
     body("accessType")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
+        .escape()
+        .optional({ checkFalsy: true }),
     body("generation")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
+        .escape()
+        .optional({ checkFalsy: true }),
     body("commision", "commision must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
         .isInt({ min: 1 })
         .escape(),
     body().custom((value, { req }) => {
@@ -78,7 +75,7 @@ exports.accrualRule_create_post = [
             // Data from form is valid. Save product.
             await rule.save();
             // res.send({ success: true });
-            res.redirect('http://localhost:3000/api/:accountId/commisionRecievers/:id');
+            res.status(200).send('Created successfully').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
         }
     }),
 ];
@@ -87,37 +84,36 @@ exports.accrualRule_create_post = [
 
 exports.accrualRule_delete_get = asyncHandler(async (req, res, next) => {
     const [rule] = await Promise.all([
-      AccrualRule.findByPk(req.params.ruleId)
+        AccrualRule.findByPk(req.params.ruleId)
     ]);
-  
+
     if (rule === null) {
-  
-      res.redirect("http://localhost:3000/api/:accountId/commisionRecievers/:id");
+
+        res.status(404).send('No rule found').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
     }
-  
+
     res.json({
-      title: "Delete rule",
-      rule: rule
+        title: "Delete rule",
+        rule: rule
     });
-  });
-  
+});
+
 
 exports.accrualRule_delete = asyncHandler(async (req, res, next) => {
     // Assume the post has valid id (ie no validation/sanitization).
-  
+
     const [rule] = await Promise.all([
-      AccrualRule.findByPk(req.params.ruleId)
+        AccrualRule.findByPk(req.params.ruleId)
     ]);
-  
+
     if (rule === null) {
-      // No results.
-      res.redirect("http://localhost:3000/api/:accountId/commisionRecievers/:id");
+        // No results.
+        res.status(404).send('No rule found').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
     }
-  
-  
-  
+
+
+
     await AccrualRule.destroy({ where: { id: req.params.ruleId } });
-    res.redirect("http://localhost:3000/api/:accountId/commisionRecievers/:id");
-  
-  });
-  
+    res.status(200).send('Deleted successfully').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
+
+});

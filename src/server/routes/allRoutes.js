@@ -24,20 +24,6 @@ router.get("/:accountId/productsByType/:typeId", products_controller.products_li
 
 
 
-/** 
- * Запрос GET для получения формы обновления продукта 
- * @param productId - id продукта 
- */
-router.get("/:accountId/products/:productId/update", products_controller.product_update_get);
-
-/** 
-  * Запрос PUT для обновления продукта
-  * @param productId - id продукта 
-  */
-router.put("/:accountId/products/:productId/update", products_controller.product_update_put);
-
-
-
 
 
 /*
@@ -45,8 +31,6 @@ router.put("/:accountId/products/:productId/update", products_controller.product
 ЗАПРОСЫ ДЛЯ ЗАКАЗОВ
 ============================================================
 */
-
-
 
 
 

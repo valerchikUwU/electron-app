@@ -1,8 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
+const { Sequelize, and, Op, fn, col } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
-const { and } = require('sequelize');
 const PriceDefinition = require('../../models/priceDefinition');
 
 

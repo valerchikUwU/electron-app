@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require("express-validator");
+const { Sequelize, Op, fn, col } = require('sequelize');
 const OrganizationCustomer = require('../../models/organizationCustomer');
-const { where, Op, Sequelize } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const Product = require('../../models/product');
@@ -15,7 +15,8 @@ exports.deposits_list = asyncHandler(async (req, res, next) => {
             [
                 {
                     model: Order,
-                    where: {
+                    where:
+                    {
                         status:
                         {
                             [Op.notIn]:
@@ -175,8 +176,10 @@ exports.deposit_create_post = [
         .isLength({ min: 1 })
         .escape(),
     body("deposit")
+        .optional({ checkFalsy: true })
         .escape(),
     body("withdraw")
+        .optional({ checkFalsy: true })
         .escape(),
     body().custom((value, { req }) => {
         if (!req.body.withdraw && !req.body.deposit) {
@@ -194,11 +197,11 @@ exports.deposit_create_post = [
         const order = new Order({
             organizationCustomerId: req.body.organizationCustomerId,
             status: 'Активный',
-            createdBySupAdm: true
+            createdBySupAdm: 1
         });
         console.log(order)
-        const deposit = await Product.findOne({where: {productTypeId: 4}})
-        const priceDef = await PriceDefinition.findOne({where: {productId: deposit.id}})
+        const deposit = await Product.findOne({ where: { productTypeId: 4 } })
+        const priceDef = await PriceDefinition.findOne({ where: { productId: deposit.id } })
 
         if (!errors.isEmpty()) {
             // There are errors. Render form again with sanitized values/error messages.
@@ -221,14 +224,15 @@ exports.deposit_create_post = [
                 await TitleOrders.create({
                     productId: deposit.id,
                     orderId: order.id,
-                    quantity: req.body.deposit === '' ? (req.body.withdraw * (-1)) : req.body.deposit,
+                    quantity: req.body.deposit === null ? (req.body.withdraw * (-1)) : req.body.deposit,
                     priceDefId: priceDef.id
                 });
             } catch (error) {
                 console.error('Ошибка при сохранении заказа или создании записи в TitleOrders:', error);
                 // Здесь можно добавить дополнительную логику обработки ошибок, например, отправку ответа с ошибкой клиенту
-                res.status(500).json({ message: 'Произошла ошибка при обработке запроса', error: error.message })};
-                //не работает редирект
+                res.status(500).json({ message: 'Произошла ошибка при обработке запроса', error: error.message })
+            };
+            //не работает редирект
             res.redirect(`http://localhost:3000/api/:accountId/deposits/${req.params.organizationCustomerId}`);
         }
     }),
