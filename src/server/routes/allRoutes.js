@@ -51,20 +51,8 @@ router.put("/:accountId/orders/:orderId/update", orders_controller.user_draftOrd
 /**
  * Запрос GET для получения всех активных заказов пользователя
  */
-router.get('/:accountId/orders', async (req, res, next) => {
-  const account = await getAccountById(req.params.accountId);
-  if (!account) {
-    return res.status(404).send('Account not found');
-  }
 
-  const ability = defineAbilitiesFor(account);
-  if (ability.can('read', 'Order')) {
-    return orders_controller.user_active_orders_list(req, res, next);
-  }
-  else {
-    return res.status(403).send('Forbidden');
-  }
-});
+router.put("/:accountId/orders", orders_controller.user_active_orders_list)
 
 
 /**
