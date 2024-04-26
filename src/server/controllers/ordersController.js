@@ -56,8 +56,6 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         group: ['Order.id'],
         raw: true
     });
-
-    9
     res.json({
         title: "active Orders list",
         orders_list: activeOrders,
@@ -515,6 +513,11 @@ exports.user_order_create_post = [
         const isDepositProduct = await ifProductTypeDeposit(productId);
         if (isDepositProduct) {
 
+            const draftOrder = await Order.findOne({ where: { status: 'Черновик депозита' }, raw: true })
+            if(draftOrder !== null)
+            {
+                res.send('Измените черновик депозита!').redirect(`http://localhost:3000/api/${req.params.accountId}/orders/${draftOrder.id}`)
+            }
 
             const organizationCustomerId = await OrganizationCustomer.findOne({
                 where: { organizationName: organizationName }

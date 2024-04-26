@@ -8,13 +8,7 @@ const priceDefinition_controller = require("../controllers/priceDefinitionContro
 const titleOrders_controller = require("../controllers/titleOrdersController");
 const organizationCustomer_controller = require("../controllers/organizationCustomerController")
 const deposit_controller = require("../controllers/depositController")
-const { defineAbilitiesFor } = require('../../utils/accessPolitics');
-const Account = require("../../models/account");
-
-async function getAccountById(accountId) {
-  const account = await Account.findOne({ where: { id: accountId } });
-  return account;
-}
+const checkAbilities = require('../../utils/checkAbility');
 
 
 /*
@@ -27,7 +21,7 @@ async function getAccountById(accountId) {
  * Запрос GET для получения всех товаров определенного типа
  * @param typeId - Тип продукта
  */
-router.get("/:accountId/productsByType/:typeId", products_controller.products_list);
+router.get("/:accountId/productsByType/:typeId", checkAbilities('read', 'Product'), products_controller.products_list);
 
 
 

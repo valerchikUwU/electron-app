@@ -34,3 +34,5 @@ function defineAbilitiesFor(account) {
 //  } else if (account.roleId === 3) { // Пользователь
 //     can('read', 'Account'); // Пользователь может читать аккаунты
 //  }
+
+module.exports = { defineAbilitiesFor };
