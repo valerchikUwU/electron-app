@@ -143,8 +143,7 @@ ProductType.hasMany(AccrualRule, {
    foreignKey: {
       name: 'productTypeId',
       type: DataTypes.INTEGER, // Использование UUID в качестве типа ключа
-      allowNull: false,
-      defaultValue: 0  // Внешний ключ не может быть NULL
+      allowNull: true
    },
    as: 'rules'
 });
@@ -159,8 +158,7 @@ Product.hasMany(AccrualRule, {
    foreignKey: {
       name: 'productId',
       type: DataTypes.UUID, // Использование UUID в качестве типа ключа
-      allowNull: false,
-      defaultValue: 0 // Внешний ключ не может быть NULL
+      allowNull: true
    },
    as: 'rules'
 });

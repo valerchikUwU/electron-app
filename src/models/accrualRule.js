@@ -17,11 +17,11 @@ const AccrualRule = sequelize.define('AccrualRule', {
 
     accessType: {
         type: DataTypes.ENUM('Бумажный', 'Электронный'),
-        allowNull: false
+        allowNull: true
     },
     generation: {
         type: DataTypes.ENUM('Первое поколение', 'Второе поколение'),
-        allowNull: false
+        allowNull: true
     },
 
 

@@ -8,6 +8,7 @@ const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const PriceDefinition = require('../../models/priceDefinition');
 const Product = require('../../models/product');
+const ProductType = require('../../models/productType');
 
 
 
@@ -22,13 +23,13 @@ exports.commisionReciever_list = asyncHandler(async (req, res, next) => {
                         attributes: []
                     }
                 ],
-                attributes: 
-                {
-                    include:
+            attributes:
+            {
+                include:
                     [
                         Sequelize.literal(`COUNT (rules.id)`), 'rulesQuantity'
                     ]
-                }
+            }
         }
     );
     res.json({
@@ -62,63 +63,42 @@ exports.commisionReciever_rules_details = asyncHandler(async (req, res, next) =>
 
 
 exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) => {
-    const [commisionReceiver] = await Promise.all([
+    const [commisionReceiver, rules] = await Promise.all([
         CommisionReciever.findByPk(req.params.commisionRecieverId),
-        Order.findAll({
-            where:
+        AccrualRule.findAll(
             {
-                status:
+                where:
                 {
-                    [Op.notIn]:
-                        [
-                            'Получен',
-                            'Черновик',
-                            'Черновик депозита',
-                            'Отменен'
-                        ]
-                }
-            },
-
-            include:
-                [
-                    {
-                        model: TitleOrders,
-                        include:
-                            [
-                                {
-                                    model: PriceDefinition,
-                                    attributes: [],
-                                    as: 'price'
-                                },
-                                {
-                                    model: Product,
-                                    attributes: [],
-                                    as: 'product'
-                                }
-                            ],
-                        attributes: []
-                    }
-                ],
-            attributes:
-            {
+                    commisionRecieverId: req.params.commisionRecieverId
+                },
                 include:
                     [
-                        [
-                            Sequelize.literal(`CASE WHEN productTypeId <> 4 AND addBooklet = TRUE THEN quantity * priceBooklet WHEN productTypeId <> 4 AND addBooklet = FALSE THEN quantity * priceAccess END`), 'Spisanie'
-                        ],
-
-                        [
-                            Sequelize.literal(`CASE WHEN productTypeId = 4 THEN (quantity*1) END `), 'Postyplenie'
-                        ],
-                        [
-                            Sequelize.literal(`billNumber`), 'billNumber'
-                        ]
+                        {
+                            model: Product,
+                            as: 'product',
+                            include:
+                                [
+                                    {
+                                        model: TitleOrders
+                                        /**
+                                         * use co06635_acad;
+            SELECT SUM(A.commision * titles.quantity) AS totalCommission
+            FROM AccrualRules A
+            JOIN TitleOrders titles ON A.productId = titles.productId
+            WHERE A.productId IN (SELECT DISTINCT productId FROM TitleOrders)
+            AND (A.accessType IS NULL OR A.accessType = titles.accessType)
+            AND (A.generation IS NULL OR A.generation = titles.generation);
+            
+                                         */
+                                    }
+                                ]
+                        },
+                        {
+                            model: ProductType,
+                            as: 'productType'
+                        }
                     ]
-            },
-
-            group: ['Order.id'],
-            raw: true
-        })
+            })
     ]);
 
 

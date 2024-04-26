@@ -25,7 +25,8 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         include: [
             {
                 model: TitleOrders,
-                include: [
+                include: 
+                [
                     {
                         model: PriceDefinition,
                         as: 'price',
