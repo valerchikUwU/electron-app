@@ -59,7 +59,7 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         raw: true
     });
     activeOrders.forEach(order => {
-        order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'yyyy-MM-dd') : null;
+        order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
     });
     res.json({
         title: "active Orders list",
