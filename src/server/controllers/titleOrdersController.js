@@ -200,15 +200,7 @@ exports.admin_titleOrder_update_put = [
             oldOrder.billNumber = order.billNumber;
             oldOrder.payeeId = order.payeeId;
             oldOrder.dispatchDate = order.dispatchDate;
-            try {
-                await oldOrder.save();
-                // Если сохранение прошло успешно, продолжаем выполнение кода
-                console.log('Запись успешно сохранена.');
-            } catch (error) {
-                // Если возникла ошибка, обрабатываем ее
-                console.error('Произошла ошибка при сохранении записи:', error);
-                // Здесь вы можете добавить дополнительную логику обработки ошибок, например, отправку ошибки клиенту
-            }
+            await oldOrder.save();
 
 
             for (const title of titlesToUpdate) {

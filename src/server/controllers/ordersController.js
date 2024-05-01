@@ -358,7 +358,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                     ]
             },
         }),
-        Product.findAll()
+        Product.findAll({where: {productTypeId: { [Op.ne]: 4}}})
     ]);
 
     if (order.id === null) {
