@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const { Sequelize, Op, fn, col } = require('sequelize');
 const Account = require('../../models/account');
 const OrganizationCustomer = require('../../models/organizationCustomer');
+const Role = require('../../models/role');
 
 exports.accounts_list = asyncHandler(async (req, res, next) => {
     const accounts = await Account.findAll({ where: { roleId: 3 }, raw: true })
@@ -100,7 +101,7 @@ exports.account_organization_create_post = [
 
         // const formattedDate = format(new Date(), 'dd:MM:yyyy');
         for (const organization of req.body.organizationList) {
-            if (await OrganizationCustomer.findOne({ where: { organizationName: organization }}) === null) {
+            if (await OrganizationCustomer.findOne({ where: { organizationName: organization } }) === null) {
                 const org = await OrganizationCustomer.create(
                     {
                         organizationName: organization
@@ -143,6 +144,125 @@ exports.account_organization_create_post = [
         }
     }),
 ];
+
+
+
+
+exports.superAdmin_account_organization_create_get = asyncHandler(async (req, res, next) => {
+    // Используем Promise.all для параллельного выполнения запросов к базе данных.
+    // В данном случае, выполняем запрос к таблице ProductType,
+    // чтобы получить все типы продуктов, отсортированные по id и name.
+    const [allOrganizations, allRoles] = await Promise.all([
+        OrganizationCustomer.findAll({ order: [['name']] }),
+        Role.findAll({
+            where: {
+                id: {
+                    [Op.ne]: 1
+                }
+            }
+        })
+    ]);
+
+    // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
+    res.json({
+        title: "Create Account",
+        organizations: allOrganizations,
+        allRoles: allRoles
+    });
+});
+
+
+exports.superAdmin_account_organization_create_post = [
+
+    (req, res, next) => {
+        if (!Array.isArray(req.body.organizationList)) {
+            req.body.organizationList =
+                typeof req.body.organizationList === "undefined" ? [] : [req.body.organizationList];
+        }
+        next();
+    },
+
+    body("firstName", "First name must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("lastName", "LastName must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("telephoneNumber", "TelephoneNumber must not be empty.")
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body("roleId", "role must be chosen")
+        .isIn([2, 3])
+        .isLength({ min: 1 })
+        .escape(),
+    body("organizationList.*").escape(),
+
+
+
+
+    asyncHandler(async (req, res, next) => {
+
+
+
+        const errors = validationResult(req);
+
+        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
+        for (const organization of req.body.organizationList) {
+            if (await OrganizationCustomer.findOne({ where: { organizationName: organization } }) === null) {
+                const org = await OrganizationCustomer.create(
+                    {
+                        organizationName: organization
+                    }
+                )
+                org.save();
+            }
+
+        }
+
+
+        const account = new Account({
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            telephoneNumber: req.body.telephoneNumber,
+            telegramId: req.body.telegramId,
+            organizationList: req.body.organizationList,
+            roleId: req.body.roleId
+        });
+
+        if (!errors.isEmpty()) {
+            // There are errors. Render form again with sanitized values/error messages.
+
+            // Get all types for form.
+            const [allOrganizations, allRoles] = await Promise.all([
+                OrganizationCustomer.findAll({ order: [['name']] }),
+                Role.findAll({
+                    where: {
+                        id: {
+                            [Op.ne]: 1
+                        }
+                    }
+                })
+            ]);
+
+
+            res.json({
+                organizations: allOrganizations,
+                allRoles: allRoles,
+                account: account,
+                errors: errors.array(),
+            });
+        } else {
+            // Data from form is valid. Save product.
+            await account.save();
+            // res.send({ success: true });
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/superAdmin/accounts`);
+        }
+    }),
+];
+
 
 
 
@@ -238,7 +358,7 @@ exports.account_update_put = [
 
             await oldAccount.save();
 
-            res.redirect("http://localhost:3000/api/:accountdId/accounts");
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/accounts`);
         }
     }),
 ];

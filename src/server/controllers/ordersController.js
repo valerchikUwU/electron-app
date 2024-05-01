@@ -9,6 +9,7 @@ const Payee = require('../../models/payee');
 const PriceDefinition = require('../../models/priceDefinition');
 const Product = require('../../models/product');
 
+const dateFns = require('date-fns');
 
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
@@ -56,6 +57,9 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         },
         group: ['Order.id'],
         raw: true
+    });
+    activeOrders.forEach(order => {
+        order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'yyyy-MM-dd') : null;
     });
     res.json({
         title: "active Orders list",
@@ -287,7 +291,7 @@ exports.admin_archivedOrders_list = asyncHandler(async (req, res, next) => {
 // Display detail page for a specific book.
 exports.user_order_detail = asyncHandler(async (req, res, next) => {
     // Get details of books, book instances for specific book
-    const [order, titles] = await Promise.all([
+    const [order, titles, products] = await Promise.all([
         Order.findByPk(req.params.orderId, {
             include:
                 [
@@ -353,7 +357,8 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                         ],
                     ]
             },
-        })
+        }),
+        Product.findAll()
     ]);
 
     if (order.id === null) {
@@ -367,6 +372,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
         title: "orders details",
         order: order,
         titles: titles,
+        products: products
     });
 });
 
@@ -514,10 +520,17 @@ exports.user_order_create_post = [
         const isDepositProduct = await ifProductTypeDeposit(productId);
         if (isDepositProduct) {
 
-            const draftOrder = await Order.findOne({ where: { status: 'Черновик депозита' }, raw: true })
+            const draftOrder = await Order.findOne({ 
+                where: 
+                { 
+                    status: 'Черновик депозита', 
+                    accountId: accountId
+                }, 
+                    raw: true 
+            })
             if(draftOrder !== null)
             {
-                res.send('Измените черновик депозита!').redirect(`http://localhost:3000/api/${req.params.accountId}/orders/${draftOrder.id}`)
+                res.send('Измените черновик депозита!')
             }
 
             const organizationCustomerId = await OrganizationCustomer.findOne({
@@ -558,7 +571,7 @@ exports.user_order_create_post = [
         }
 
 
-        else if (await Order.findOne({ where: { status: 'Черновик' }, raw: true }) === null) {
+        else if (await Order.findOne({ where: { status: 'Черновик', accountId: accountId }, raw: true }) === null) {
 
 
             const firstOrganizationName = await getFirstOrganizationCustomerName(accountId)
@@ -600,7 +613,8 @@ exports.user_order_create_post = [
                 {
                     where:
                     {
-                        status: 'Черновик'
+                        status: 'Черновик',
+                        accountId: accountId
                     },
                     raw: true
                 }
@@ -616,10 +630,10 @@ exports.user_order_create_post = [
                     priceDefId: priceDefinition.id
                 }
             )
-                .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
+                .then(() => res.status(200).send('Товар успешно добавлен в заказ!'))
                 .catch(err => {
                     console.log(err);
-                    res.status(500).send('ERROR CREATING TITLE');
+                    res.status(500).send('Не получилось добавить товар в заказ!');
                 });
         }
     }),
@@ -703,7 +717,7 @@ exports.admin_order_create_post = [
 
 
 
-exports.user_draftOrder_update_put = [
+exports.user_draftOrder_updateStatus_put = [
 
 
 
@@ -753,7 +767,7 @@ exports.user_draftOrder_update_put = [
 
 
 
-exports.user_receivedOrder_update_put = [
+exports.user_receivedOrder_updateStatus_put = [
 
 
 
@@ -837,8 +851,9 @@ exports.admin_order_update_put = [
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = order.status;
             oldOrder.billNumber = order.billNumber;
+            oldOrder.dispatchDate = order.dispatchDate
             await oldOrder.save();
-            res.redirect('http://localhost:3000/api/:accountId/orders/all');
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders/all`);
         }
     }),
 ];

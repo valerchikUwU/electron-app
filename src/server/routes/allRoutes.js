@@ -6,7 +6,6 @@ const orders_controller = require("../controllers/ordersController");
 const payees_controller = require("../controllers/payeeController");
 const priceDefinition_controller = require("../controllers/priceDefinitionController");
 const titleOrders_controller = require("../controllers/titleOrdersController");
-const organizationCustomer_controller = require("../controllers/organizationCustomerController")
 const deposit_controller = require("../controllers/depositController")
 const checkAbilities = require('../../utils/checkAbility');
 
@@ -40,48 +39,45 @@ router.get("/:accountId/productsByType/:typeId", checkAbilities('read', 'Product
 /**
  * Запрос POST для создания заказа от лица пользователя
  */
-router.post("/:accountId/orders/newOrder", checkAbilities('create', 'OrderUser'), orders_controller.user_order_create_post);
+router.post("/:accountId/orders/newOrder", checkAbilities('create', 'Order_User'), orders_controller.user_order_create_post);
 
 /**
  * Запрос PUT для обновления черновика заказа от лица пользователя (НА СТРАНИЦЕ "В РАБОТЕ")
  */
-router.put("/:accountId/orders/:orderId/update", checkAbilities('update', 'OrderUser'), orders_controller.user_draftOrder_update_put)
+router.put("/:accountId/orders/:orderId/active", checkAbilities('update', 'Order_User'), orders_controller.user_draftOrder_updateStatus_put)
 
 /**
  * Запрос PUT для обновления отправленного заказа на полученный от лица пользователя (НА СТРАНИЦЕ "В РАБОТЕ")
  */
-router.put("/:accountId/orders/:orderId/recieved", checkAbilities('update', 'OrderUser'), orders_controller.user_receivedOrder_update_put)
+router.put("/:accountId/orders/:orderId/recieved", checkAbilities('update', 'Order_User'), orders_controller.user_receivedOrder_updateStatus_put)
 
 
 /**
  * Запрос GET для получения всех активных заказов пользователя
  */
 
-router.get("/:accountId/orders", checkAbilities('read', 'OrderUser'),  orders_controller.user_active_orders_list)
+router.get("/:accountId/orders", checkAbilities('read', 'Order_User'),  orders_controller.user_active_orders_list)
 
 
 
 /**
  * Запрос GET для получения всех завершенных заказов пользователя
  */
-router.get("/:accountId/orders/finished", checkAbilities('read', 'OrderUser'), orders_controller.user_finished_orders_list);
+router.get("/:accountId/orders/finished", checkAbilities('read', 'Order_User'), orders_controller.user_finished_orders_list);
 
 
 /**
  * Запрос GET для получения всех заказов от лица админа
  */
-router.get("/:accountId/orders/all", checkAbilities('read', 'OrderAdmin'), orders_controller.admin_orders_list);
+router.get("/:accountId/orders/all", checkAbilities('read', 'Order_Admin'), orders_controller.admin_orders_list);
 
 /**
  * Запрос GET для получения всех архивных заказов от лица админа
  */
-router.get("/:accountId/orders/archive", checkAbilities('read', 'OrderAdmin'), orders_controller.admin_archivedOrders_list);
+router.get("/:accountId/orders/archive", checkAbilities('read', 'Order_Admin'), orders_controller.admin_archivedOrders_list);
 
 
-/**
- * Запрос PUT для обновления заказа от лица админа
- */
-router.put("/:accountId/orders/admin/:orderId/update", checkAbilities('update', 'OrderAdmin'), orders_controller.admin_order_update_put)
+
 
 /**
  * Запрос GET для получения деталей (Всех TitleOrders и OrganizationCustomer) для выбранного заказа от лица админа
@@ -112,6 +108,12 @@ router.get("/:accountId/orders/:orderId", checkAbilities('read', 'Order_User'), 
  */
 router.delete("/:accountId/orders/:orderId/delete/:titleId", checkAbilities('delete', 'TitleOrder_User'), titleOrders_controller.title_delete)
 
+/**
+ * Запрос PUT для обновления ВСЕХ! TitleOrder в заказе от лица админа
+ * @param orderId - id заказа
+ */
+router.put("/:accountId/orders/admin/:orderId/update", checkAbilities('update', 'TitleOrder_Admin'), titleOrders_controller.admin_titleOrder_update_put);
+
 
 /**
  * Запрос PUT для обновления ВСЕХ! TitleOrder в заказе от лица пользователя
@@ -121,11 +123,7 @@ router.put("/:accountId/orders/:orderId/update", checkAbilities('update', 'Title
 
 
 
-/**
- * Запрос PUT для обновления ВСЕХ! TitleOrder в заказе от лица админа
- * @param orderId - id заказа
- */
-router.put("/:accountId/orders/admin/update/:orderId", checkAbilities('update', 'TitleOrder_Admin'), titleOrders_controller.admin_titleOrder_update_put);
+
 
 
 
@@ -205,6 +203,9 @@ router.get("/:accountId/accounts/:accountFocusId/update", checkAbilities('read',
  */
 router.put("/:accountId/accounts/:accountFocusId/update", checkAbilities('update', 'Account'), accounts_controller.account_update_put);
 
+
+
+
 /**
  * Запрос GET для всех пользователей от лица суперАдмина
  */
@@ -235,6 +236,16 @@ router.get("/:accountId/newAccount", checkAbilities('read', 'Account'), accounts
 router.post("/:accountId/newAccount", checkAbilities('create', 'Account'), accounts_controller.account_organization_create_post);
 
 
+/**
+ * Запрос GET для получения формы создания нового аккаунта
+ */
+router.get("/:accountId/superAdmin/newAccount", checkAbilities('read', 'SuperAdmin'), accounts_controller.superAdmin_account_organization_create_get);
+
+
+/**
+ * Запрос POST для создания нового аккаунта
+ */
+router.post("/:accountId/superAdmin/newAccount", checkAbilities('create', 'SuperAdmin'), accounts_controller.superAdmin_account_organization_create_post);
 
 
 

@@ -1,7 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../database/connection');
 
-
 const Order = sequelize.define('Order', {
     id: {
         type: Sequelize.UUID,
@@ -13,6 +12,7 @@ const Order = sequelize.define('Order', {
         type: DataTypes.DATE,
         allowNull: true
     },
+
     status: {
         type: DataTypes.ENUM('Черновик', 'Черновик депозита', 'Активный', 'Выставлен счёт', 'Оплачен', 'Отправлен', 'Получен', 'Отменен'),
         defaultValue: 'Черновик',

@@ -15,14 +15,14 @@ if (account.isBlocked) {
       can('manage', 'all'); // СуперАдмин может управлять всем
       break;
     case 2: // Админ
-      can('read',   ['OrderAdmin', 'Account', 'PriceDefinition', 'Deposit']); // Админ может читать все
-      can('create', ['OrderAdmin', 'Account', 'PriceDefinition']); // Админ может создавать заказы
-      can('update', ['OrderAdmin', 'Account', 'PriceDefinition', 'TitleOrder_Admin']); // Админ может обновлять заказы
+      can('read',   ['Order_Admin', 'Account', 'PriceDefinition', 'Deposit']); // Админ может читать все
+      can('create', ['Order_Admin', 'Account', 'PriceDefinition']); // Админ может создавать заказы
+      can('update', ['Order_Admin', 'Account', 'PriceDefinition', 'TitleOrder_Admin']); // Админ может обновлять заказы
       break;
     case 3: // Пользователь
-      can('read',   ['OrderUser', 'Product', 'TitleOrder_User']); // Пользователь может читать свои заказы
-      can('create', ['OrderUser', 'TitleOrderUser']); // Пользователь может создавать заказы
-      can('update', ['OrderUser', 'TitleOrderUser'], { accountId: account.id }); // Пользователь может обновлять свои заказы
+      can('read',   ['Order_User', 'Product', 'TitleOrder_User']); // Пользователь может читать свои заказы
+      can('create', ['Order_User', 'TitleOrder_User']); // Пользователь может создавать заказы
+      can('update', ['Order_User', 'TitleOrder_User'], { accountId: account.id }); // Пользователь может обновлять свои заказы
       can('delete', ['TitleOrder'], { accountId: account.id }); // Пользователь может удалять свои наименования
       break;
     default:

@@ -4,6 +4,7 @@ const { Sequelize, and, Op, fn, col } = require('sequelize');
 const Order = require('../../models/order');
 const TitleOrders = require('../../models/titleOrders');
 const PriceDefinition = require('../../models/priceDefinition');
+const OrganizationCustomer = require('../../models/organizationCustomer');
 
 
 
@@ -74,9 +75,9 @@ exports.user_titleOrder_update_put = [
                         if (title.accessType)
                             oldTitle.accessType = title.accessType;
                     }
-                    if (title.productId){
+                    if (title.productId) {
                         oldTitle.productId = title.productId;
-                        const priceDef = await PriceDefinition.findOne({where: {productId: title.productId}});
+                        const priceDef = await PriceDefinition.findOne({ where: { productId: title.productId } });
                         oldTitle.priceDefId = priceDef.id
                     }
 
@@ -106,7 +107,7 @@ exports.title_delete = asyncHandler(async (req, res, next) => {
         res.status(404).send('Title not found');
     }
 
-    await TitleOrders.destroy({where: {id: req.params.titleId}});
+    await TitleOrders.destroy({ where: { id: req.params.titleId } });
     res.status(200).send('Title destroyed');
 
 });
@@ -118,7 +119,7 @@ exports.admin_titleOrder_update_put = [
 
 
     // Validate and sanitize fields.
-    body("organizationCustomerId", "organizationCustomerId must not be empty.")
+    body("organizationName", "organizationName must not be empty.")
         .trim()
         .isLength({ min: 1 })
         .escape(),
@@ -129,22 +130,25 @@ exports.admin_titleOrder_update_put = [
     body("billNumber")
         .optional({ checkFalsy: true })
         .escape(),
-    body("productId", "productId must be chosen")
+    body("payeeId")
+        .optional({ checkFalsy: true })
+        .escape(),
+    body("productId")
         .if(body("productId").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("accessType", "accessType must be choses")
+    body("accessType")
         .if(body("accessType").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("generation", "generation must be chosen")
+    body("generation")
         .if(body("generation").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("quantity", "quantity must be written")
+    body("quantity")
         .if(body("quantity").exists())
         .trim()
         .isLength({ min: 1 })
@@ -159,7 +163,20 @@ exports.admin_titleOrder_update_put = [
 
 
         const titlesToUpdate = req.body.titlesToUpdate;
-        console.log(titlesToUpdate);
+        const organizationCustomer = await OrganizationCustomer.findOne({
+            where: { organizationName: req.body.organizationName }
+        });
+
+        const order = new Order({
+            organizationCustomerId: organizationCustomer.id,
+            status: req.body.status,
+            billNumber: req.body.billNumber,
+            payeeId: req.body.payeeId,
+            dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
+            _id: req.params.orderId
+        });
+
+
         if (!errors.isEmpty()) {
             const [order, titleOrders] = await Promise.all([
                 Order.findByPk(req.params.orderId),
@@ -176,18 +193,22 @@ exports.admin_titleOrder_update_put = [
             return;
         } else {
 
-            const order = new Order({
-                organizationCustomerId: req.body.organizationCustomerId,
-                status: req.body.status,
-                billNumber: req.body.billNumber,
-                _id: req.params.orderId
-            });
-
+            
             const oldOrder = await Order.findByPk(req.params.orderId);
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = order.status;
             oldOrder.billNumber = order.billNumber;
-            await oldOrder.save();
+            oldOrder.payeeId = order.payeeId;
+            oldOrder.dispatchDate = order.dispatchDate;
+            try {
+                await oldOrder.save();
+                // Если сохранение прошло успешно, продолжаем выполнение кода
+                console.log('Запись успешно сохранена.');
+            } catch (error) {
+                // Если возникла ошибка, обрабатываем ее
+                console.error('Произошла ошибка при сохранении записи:', error);
+                // Здесь вы можете добавить дополнительную логику обработки ошибок, например, отправку ошибки клиенту
+            }
 
 
             for (const title of titlesToUpdate) {
