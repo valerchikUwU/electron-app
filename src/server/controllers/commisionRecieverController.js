@@ -80,16 +80,7 @@ exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) 
                                 [
                                     {
                                         model: TitleOrders
-                                        /**
-                                         * use co06635_acad;
-            SELECT SUM(A.commision * titles.quantity) AS totalCommission
-            FROM AccrualRules A
-            JOIN TitleOrders titles ON A.productId = titles.productId
-            WHERE A.productId IN (SELECT DISTINCT productId FROM TitleOrders)
-            AND (A.accessType IS NULL OR A.accessType = titles.accessType)
-            AND (A.generation IS NULL OR A.generation = titles.generation);
-            
-                                         */
+                                        
                                     }
                                 ]
                         },
@@ -162,3 +153,17 @@ exports.commisionReciever_create_post = [
         }
     }),
 ];
+
+
+
+
+/**
+                                         * use co06635_acad;
+            SELECT SUM(A.commision * titles.quantity) AS totalCommission
+            FROM AccrualRules A
+            JOIN TitleOrders titles ON A.productId = titles.productId
+            WHERE A.productId IN (SELECT DISTINCT productId FROM TitleOrders)
+            AND (A.accessType IS NULL OR A.accessType = titles.accessType)
+            AND (A.generation IS NULL OR A.generation = titles.generation);
+            
+                                         */
