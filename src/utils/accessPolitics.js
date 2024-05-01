@@ -3,6 +3,13 @@ const { AbilityBuilder, Ability } = require('@casl/ability');
 function defineAbilitiesFor(account) {
  const { can, cannot, rules } = new AbilityBuilder(Ability);
 
+
+// Если аккаунт заблокирован, запрещаем все действия
+if (account.isBlocked) {
+   cannot('manage', 'all');
+   return new Ability(rules);
+}
+
  switch (account.roleId) {
     case 1: // СуперАдмин
       can('manage', 'all'); // СуперАдмин может управлять всем
@@ -10,10 +17,10 @@ function defineAbilitiesFor(account) {
     case 2: // Админ
       can('read',   ['OrderAdmin', 'Account', 'PriceDefinition', 'Deposit']); // Админ может читать все
       can('create', ['OrderAdmin', 'Account', 'PriceDefinition']); // Админ может создавать заказы
-      can('update', ['OrderAdmin', 'Account', 'PriceDefinition', 'TitleOrderAdmin']); // Админ может обновлять заказы
+      can('update', ['OrderAdmin', 'Account', 'PriceDefinition', 'TitleOrder_Admin']); // Админ может обновлять заказы
       break;
     case 3: // Пользователь
-      can('read',   ['OrderUser', 'Product', 'TitleOrderUser']); // Пользователь может читать свои заказы
+      can('read',   ['OrderUser', 'Product', 'TitleOrder_User']); // Пользователь может читать свои заказы
       can('create', ['OrderUser', 'TitleOrderUser']); // Пользователь может создавать заказы
       can('update', ['OrderUser', 'TitleOrderUser'], { accountId: account.id }); // Пользователь может обновлять свои заказы
       can('delete', ['TitleOrder'], { accountId: account.id }); // Пользователь может удалять свои наименования

@@ -775,7 +775,7 @@ exports.user_receivedOrder_update_put = [
             if (oldOrder.status !== 'Отправлен') {
                 res.status(400).send('Этот заказ еще не отправлен!')
             }
-            oldOrder.status = 'Активный'
+            oldOrder.status = 'Получен'
             await oldOrder.save();
             res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders`);
         }

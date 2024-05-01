@@ -16,22 +16,9 @@ router.post('/auth', async (req, res) => {
             // Здесь вы проверяете номер телефона в базе данных
             const foundNumber = await getTelephoneNumber(phoneNumber);
             if (foundNumber) {                
-            Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
-            const accountId = await Account.findOne({where:{telephoneNumber: foundNumber} })
-            res.send({ success: true });
-            // НЕЯСНО КАК РЕДИРЕКТИТЬ
-            // switch(checkUserRole){
-
-            //     case 1:
-            //         res.redirect('/');
-            //         break;
-            //     case 2:
-            //         res.redirect();
-            //         break;
-            //     case 3:
-            //         res.redirect();
-            //         break;
-            // }
+                Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
+                const accountId = await Account.findOne({where:{telephoneNumber: foundNumber} })
+                res.send({ success: true });
             } 
             else {
             res.send({ success: false });
@@ -41,19 +28,6 @@ router.post('/auth', async (req, res) => {
 // Запуск бота
 startBot();
 
-async function checkUserRole(telephoneNumber){
-    const account = await Account.findOne({
-        where: {
-            telephoneNumber: telephoneNumber
-        }
-    });
-
-    if (account) {
-        return account.roleId;
-    } else {
-        return null;
-    }
-}
 
 async function getTelephoneNumber(telephoneNumber) {
     try {

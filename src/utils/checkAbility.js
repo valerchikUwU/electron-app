@@ -15,8 +15,9 @@ const checkAbilities = (action, subject) => {
     const ability = defineAbilitiesFor(account);
     if (ability.can(action, subject)) {
       next();
-    } else {
-      res.status(403).send('У вас нет прав доступа!');
+    } 
+    else {
+      res.status(403).send('У вас нет прав доступа или вы были заблокированы!');
     }
  };
 };
