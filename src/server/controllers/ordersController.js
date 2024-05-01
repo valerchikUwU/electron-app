@@ -753,6 +753,35 @@ exports.user_draftOrder_update_put = [
 
 
 
+exports.user_receivedOrder_update_put = [
+
+
+
+
+
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+
+
+            res.json({
+                title: "Update order",
+                errors: errors.array(),
+            });
+            return;
+        } else {
+            const oldOrder = await Order.findByPk(req.params.orderId);
+            if (oldOrder.status !== 'Отправлен') {
+                res.status(400).send('Этот заказ еще не отправлен!')
+            }
+            oldOrder.status = 'Активный'
+            await oldOrder.save();
+            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders`);
+        }
+    }),
+];
+
 
 
 

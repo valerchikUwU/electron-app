@@ -47,6 +47,11 @@ router.post("/:accountId/orders/newOrder", checkAbilities('create', 'OrderUser')
  */
 router.put("/:accountId/orders/:orderId/update", checkAbilities('update', 'OrderUser'), orders_controller.user_draftOrder_update_put)
 
+/**
+ * Запрос PUT для обновления отправленного заказа на полученный от лица пользователя (НА СТРАНИЦЕ "В РАБОТЕ")
+ */
+router.put("/:accountId/orders/:orderId/received", checkAbilities('update', 'OrderUser'), orders_controller.user_receivedOrder_update_put)
+
 
 /**
  * Запрос GET для получения всех активных заказов пользователя
