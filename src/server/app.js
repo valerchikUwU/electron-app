@@ -1,7 +1,8 @@
+
+require('dotenv').config();
 const express = require('express');
 const compression = require("compression");
 const helmet = require("helmet");
-
 const authRoutes = require('./routes/authRoutes');
 const allRoutes = require('./routes/allRoutes');
 
@@ -41,7 +42,7 @@ app.use(function (req, res, next) {
 //СМОТРЕЛ middleware ОБРАБОТЧИК ОШИБОК И ОСТАНОВИЛСЯ НА TRY CATCH в OrdersController 
 
 // Запуск Express сервера
-const PORT = 3000;
+const PORT = process.env.SERVER_PORT;
 app.listen(PORT, () => {
  console.log(`Server is running on port ${PORT}`);
 });
