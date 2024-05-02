@@ -8,9 +8,6 @@ const router = express.Router();
 
 // Маршрут для обработки запросов от бота
 router.post('/auth', async (req, res) => {
-    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    console.log(`full URL: ${fullUrl}`);
-    console.log('body:', req.body);
             const phoneNumber = req.body.phone;
             const id = req.body.id;
             // Здесь вы проверяете номер телефона в базе данных

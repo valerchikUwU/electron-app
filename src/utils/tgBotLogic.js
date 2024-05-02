@@ -1,15 +1,11 @@
 const { Telegraf, Markup } = require('telegraf');
-const fetch = require('node-fetch'); // Убедитесь, что у вас установлен node-fetch для использования fetch в Node.js
+const fetch = require('node-fetch'); 
+require('dotenv').config();
 
 
+const apiRoot = process.env.API_ROOT;
 
-function formatPhoneNumber(phoneNumber) {
-    // Проверяем, начинается ли номер телефона с "+", если нет, добавляем
-    if (!phoneNumber.startsWith('+')) {
-        phoneNumber = '+' + phoneNumber;
-    }
-    return phoneNumber;
-}
+
 
 async function startBot() {
     if (!process.env.BOT_TOKEN) throw new Error('"BOT_TOKEN" env var is required!');
@@ -30,9 +26,8 @@ async function startBot() {
 
     bot.on('contact', async (ctx) => {
         const phoneNumber = formatPhoneNumber(ctx.message.contact.phone_number);
-        console.log(phoneNumber);
         const telegramId = ctx.message.contact.user_id;
-        const response = await fetch('http://localhost:3000/api/auth', {
+        const response = await fetch(`${apiRoot}/auth`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -48,6 +43,15 @@ async function startBot() {
     });
 
     bot.launch();
+}
+
+
+function formatPhoneNumber(phoneNumber) {
+    // Проверяем, начинается ли номер телефона с "+", если нет, добавляем
+    if (!phoneNumber.startsWith('+')) {
+        phoneNumber = '+' + phoneNumber;
+    }
+    return phoneNumber;
 }
 
 module.exports = { startBot };

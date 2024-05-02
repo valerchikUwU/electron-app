@@ -759,7 +759,7 @@ exports.user_draftOrder_updateStatus_put = [
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = 'Активный'
             await oldOrder.save();
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders`);
+            res.status(200).send('Заказ успешно переведён в статус "Активный"!');
         }
     }),
 ];
@@ -790,7 +790,7 @@ exports.user_receivedOrder_updateStatus_put = [
             }
             oldOrder.status = 'Получен'
             await oldOrder.save();
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders`);
+            res.status(200).send('Заказ успешно переведён в статус "Получен"!');
         }
     }),
 ];
@@ -852,7 +852,7 @@ exports.admin_order_update_put = [
             oldOrder.billNumber = order.billNumber;
             oldOrder.dispatchDate = order.dispatchDate
             await oldOrder.save();
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders/all`);
+            res.status(200).send('Заказ успешно обновлен!');
         }
     }),
 ];
