@@ -39,7 +39,6 @@ app.use(function (req, res, next) {
     res.status(500).send(res.locals.message || 'Internal Server Error');
   });
 
-//СМОТРЕЛ middleware ОБРАБОТЧИК ОШИБОК И ОСТАНОВИЛСЯ НА TRY CATCH в OrdersController 
 
 // Запуск Express сервера
 const PORT = process.env.SERVER_PORT;
