@@ -26,7 +26,7 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
         }]
     });
     res.json({
-        title: "prices list",
+        title: "Список прайс листов",
         pricesInit: pricesInit,
         pricesMain: pricesMain,
         pricesForEmployers: pricesForEmployers,
@@ -43,7 +43,7 @@ exports.price_create_get = asyncHandler(async (req, res, next) => {
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create priceDefinition",
+        title: "Форма создания прайс листа",
         allProducts: allProducts,
         thisProduct: thisProduct
     });
@@ -51,25 +51,19 @@ exports.price_create_get = asyncHandler(async (req, res, next) => {
 
 exports.price_create_post = [
 
-    body("name", "name must not be empty.")
+    body("name", "Название должно быть указано")
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("abbreviation", "abbreviation must not be empty.")
+    body("abbreviation", "Аббревиаутра должна быть указана")
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("productTypeId")
-        .trim()
-        .isLength({ min: 1 })
+    body("priceAccess", "Цена доступа должна быть указана")
+        .isInt({ min: 1 })
         .escape(),
-    body("priceAccess", "priceAccess must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("priceBooklet", "priceBooklet must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
+    body("priceBooklet", "Цена буклета должна быть указана")
+        .isInt({ min: 1 })
         .escape(),
 
 
@@ -77,11 +71,9 @@ exports.price_create_post = [
 
         const errors = validationResult(req);
 
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
         const product = new Product({
             name: req.body.name,
             abbreviation: req.body.abbreviation,
-            productTypeId: req.body.productTypeId
         })
 
 
@@ -93,24 +85,23 @@ exports.price_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-            // Get all types for form.
             const [allProducts] = await Promise.all([
                 Product.findAll({ order: [['name']] })
             ]);
 
 
             res.json({
+                title: "Некорректная форма создания прайс листа!",
                 allProducts: allProducts,
                 price: price,
                 errors: errors.array(),
             });
-        } else {
+        } 
+        else {
 
             await product.save();
             await price.save();
-            res.redirect('http://localhost:3000/api/:accountId/prices');
+            res.status(200).send("Прайс лист успешно создан!");
         }
     }),
 ];
@@ -123,7 +114,7 @@ exports.price_update_get = asyncHandler(async (req, res, next) => {
     ]);
 
     if (!price) {
-        const err = new Error("priceDef not found");
+        const err = new Error("Такой прайс лист не найден!");
         err.status = 404;
         return next(err);
     }
@@ -131,7 +122,7 @@ exports.price_update_get = asyncHandler(async (req, res, next) => {
 
 
     res.json({
-        title: "Update priceDef",
+        title: "Форма обновления прайс - листа",
         price: price,
     });
 });
@@ -139,14 +130,7 @@ exports.price_update_get = asyncHandler(async (req, res, next) => {
 
 exports.price_update_put = [
 
-    body("name", "name must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("abbreviation", "abbreviation must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
+    
     body("priceAccess", "priceAccess must not be empty.")
         .trim()
         .isLength({ min: 1 })
@@ -168,37 +152,26 @@ exports.price_update_put = [
             _id: req.body.priceDefId
         });
 
-        const product = new Product({
-            name: req.body.name,
-            abbreviation: req.body.abbreviation,
-            _id: oldPrice.productId
-        })
 
         if (!errors.isEmpty()) {
 
 
 
             res.json({
-                title: "Updated priceDef",
+                title: "Некорректная форма обновления прайс листа",
                 price: price,
                 errors: errors.array(),
             });
             return;
         } else {
 
-            const oldProduct = await Product.findByPk(oldPrice.productId)
-            // const formattedDate = format(new Date(), 'dd:MM:yyyy');
             oldPrice.priceAccess = price.priceAccess;
             oldPrice.priceBooklet = price.priceBooklet;
 
-            oldProduct.name = product.name;
-            oldProduct.abbreviation = product.abbreviation;
-            // Данные из формы валидны. Обновляем запись.
             await oldPrice.save();
-            await oldProduct.save();
 
             // Перенаправляем на страницу с деталями продукта.
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/prices`);
+            res.status(200).send("Прайс лист успешно обновлен!");
         }
     }),
 ];

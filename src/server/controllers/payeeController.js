@@ -7,7 +7,7 @@ const Payee = require('../../models/payee');
 exports.payee_list = asyncHandler(async (req, res, next) => {
     const allPayees = await Payee.findAll();
     res.json({
-        title: "payee list",
+        title: "Список получателей платежа",
         payees_list: allPayees
     })
 });
@@ -16,7 +16,7 @@ exports.payee_create_get = asyncHandler(async (req, res, next) => {
   
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-      title: "Create Payee"
+      title: "Форма создания получателя платежа"
     });
   });
 
@@ -26,7 +26,7 @@ exports.payee_create_post = [
     
   
   
-    body("name", "Name must not be empty.")
+    body("name", "Наименование получателя должно быть указано!")
       .trim()
       .isLength({ min: 1 })
       .escape(),
@@ -53,7 +53,7 @@ exports.payee_create_post = [
       } else {
         // Data from form is valid. Save product.
         await payee.save();
-        res.redirect('http://localhost:3000/api/:accountId/payees');
+        res.status(200).send('Получатель успешно создан!');
       }
     }),
   ];
