@@ -51,14 +51,14 @@ async function syncModels() {
   try {
      await Role.sync();
      await Account.sync();
-     await Payee.sync({ alter: true });
+     await Payee.sync();
      await ProductType.sync();
      await OrganizationCustomer.sync();
      await Product.sync();
      await PriceDefinition.sync();
      await CommisionReciever.sync();
-     await Order.sync({ alter: true });
-     await TitleOrders.sync({ alter: true });
+     await Order.sync();
+     await TitleOrders.sync();
      await AccrualRule.sync();
      console.log('Syncronized successfully');
   } catch (error) {

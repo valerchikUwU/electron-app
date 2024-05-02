@@ -6,7 +6,7 @@ const OrganizationCustomer = require('../../models/organizationCustomer');
 exports.organizations_list = asyncHandler(async (req, res, next) => {
     const organizations = await OrganizationCustomer.findAll({ raw: true })
     res.json({
-        title: "organizations list",
+        title: "Список организаций",
         organizations: organizations
     });
 }

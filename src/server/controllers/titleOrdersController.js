@@ -16,22 +16,22 @@ exports.user_titleOrder_update_put = [
 
 
     // Validate and sanitize fields.
-    body("titlesToUpdate.*.productId", "productId must be chosen")
+    body("titlesToUpdate.*.productId")
         .if(body("productId").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("titlesToUpdate.*.accessType", "accessType must be choses")
+    body("titlesToUpdate.*.accessType")
         .if(body("accessType").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("titlesToUpdate.*.generation", "generation must be chosen")
+    body("titlesToUpdate.*.generation")
         .if(body("generation").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("titlesToUpdate.*.quantity", "quantity must be written")
+    body("titlesToUpdate.*.quantity")
         .if(body("quantity").exists())
         .trim()
         .isLength({ min: 1 })
@@ -42,7 +42,7 @@ exports.user_titleOrder_update_put = [
     body().custom((value, { req }) => {
         const titlesToUpdate = req.body.titlesToUpdate;
         for (const title of titlesToUpdate) {
-            if (title.addBooklet === 1 && title.accessType !== null) {
+            if (title.addBooklet === 1 && title.accessType !== undefined) {
                 throw new Error('Буклет представлен только в виде бумажного формата!');
             }
         }
@@ -65,7 +65,7 @@ exports.user_titleOrder_update_put = [
 
 
             res.json({
-                title: "Update titles of order",
+                title: "Обновление наименований в заказе",
                 titleOrders: titleOrders,
                 order: order,
                 errors: errors.array(),
@@ -77,30 +77,36 @@ exports.user_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    if (title.addBooklet !== undefined && title.addBooklet === 0) {
+                    if (title.addBooklet === 1) {
                         oldTitle.addBooklet = title.addBooklet;
                         oldTitle.accessType = null;
                     }
                     else {
-                        if (title.accessType)
-                            oldTitle.accessType = title.accessType;
+                        oldTitle.addBooklet = title.addBooklet;
                     }
+                    if (title.accessType) {
+                        oldTitle.accessType = title.accessType;
+                    }
+
                     if (title.productId) {
                         oldTitle.productId = title.productId;
                         const priceDef = await PriceDefinition.findOne({ where: { productId: title.productId } });
                         oldTitle.priceDefId = priceDef.id
                     }
 
-                    if (title.generation)
+                    if (title.generation) {
                         oldTitle.generation = title.generation;
+                    }
 
-                    if (title.quantity)
+
+                    if (title.quantity) {
                         oldTitle.quantity = title.quantity;
+                    }
 
                     await oldTitle.save();
                 }
             }
-            res.status(200).send('Titles successfully updated');
+            res.status(200).send('Наименования успешно обновлены!');
         }
     }),
 ];
@@ -113,11 +119,11 @@ exports.title_delete = asyncHandler(async (req, res, next) => {
 
     if (title === null) {
         // No results.
-        res.status(404).send('Title not found');
+        res.status(404).send('Наименование не найдено!');
     }
 
     await TitleOrders.destroy({ where: { id: req.params.titleId } });
-    res.status(200).send('Title destroyed');
+    res.status(200).send('Наименование успешно удалено!');
 
 });
 
@@ -203,7 +209,7 @@ exports.admin_titleOrder_update_put = [
 
 
             res.json({
-                title: "Update titles of order",
+                title: "Некорректная форма обновления!",
                 titleOrders: titleOrders,
                 order: order,
                 errors: errors.array(),
@@ -225,12 +231,13 @@ exports.admin_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    if (title.addBooklet !== undefined && title.addBooklet === 0) {
-                        oldTitle.addBooklet = title.addBooklet;
+                    if (title.addBooklet === 1) {
                         oldTitle.accessType = null;
                     }
                     else {
-                        if (title.accessType)
+                        oldTitle.addBooklet = title.addBooklet;
+                    }
+                    if (title.accessType) {
                             oldTitle.accessType = title.accessType;
                     }
                     if (title.productId) {
@@ -248,7 +255,7 @@ exports.admin_titleOrder_update_put = [
                     await oldTitle.save();
                 }
             }
-            res.status(200).send('Titles successfully updated');
+            res.status(200).send('Наименования успешно обновлены');
         }
     }),
 ];

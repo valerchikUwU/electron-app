@@ -364,7 +364,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
             Product.findAll({where: {productTypeId: { [Op.ne]: 4}}})
         ]);
 
-        if (order === null) {
+        if (order.id === null) {
             // No results.
             const err = new Error("Заказ не найден");
             err.status = 404;
@@ -455,7 +455,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             })
         ]);
 
-        if (order === null) {
+        if (order.id === null) {
             // No results.
             const err = new Error("Заказ не найден");
             err.status = 404;
@@ -647,7 +647,7 @@ exports.admin_order_create_get = asyncHandler(async (req, res, next) => {
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create Order",
+        title: "Форма создания заказа",
         accounts: allAccounts
     });
 });
@@ -656,15 +656,15 @@ exports.admin_order_create_post = [
 
     
 
-    body("accountId", "Account must not be empty.")
+    body("accountId", "Заказчик должен быть указан")
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("organization", "organization must not be empty.")
+    body("organization", "Организация должна быть указана")
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("status", "Status must not be empty.")
+    body("status", "Заказ не может быть без статуса")
         .trim()
         .isLength({ min: 1 })
         .escape(),
@@ -702,14 +702,14 @@ exports.admin_order_create_post = [
 
 
             res.json({
-                title: "Create Order",
+                title: "Некорректная форма создания заказа!",
                 allAccounts: allAccounts,
                 order: order,
                 errors: errors.array(),
             });
         } else {
             await order.save();
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/orders/all`);
+            res.status(200).send('Заказ успешно создан!');
         }
     }),
 ];

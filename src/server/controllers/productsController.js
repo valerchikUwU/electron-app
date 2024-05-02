@@ -154,7 +154,7 @@ async function getOrganizationList(accountId) {
           return null;
       }
   } catch (error) {
-      console.error('Error fetching org list:', error);
+      console.error('Ошибка получения списка организаций данного аккаунта:', error);
       return null;
   }
 }
