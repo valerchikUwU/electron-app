@@ -13,7 +13,7 @@ exports.products_list = asyncHandler(async (req, res, next) => {
   const productTypeId = parseInt(req.params.typeId, 10);
 
   if (isNaN(productTypeId)) {
-    return res.status(400).json({ error: 'Invalid product type ID' });
+    return res.status(400).json({ error: 'Неверный тип товара!' });
   }
 
   switch (productTypeId) {
@@ -24,7 +24,7 @@ exports.products_list = asyncHandler(async (req, res, next) => {
       });
 
       res.json({
-        title: "ProductInitList",
+        title: "Начальные",
         productsList: productsInit
       });
       break;
@@ -35,7 +35,7 @@ exports.products_list = asyncHandler(async (req, res, next) => {
       });
 
       res.json({
-        title: "ProductMainList",
+        title: "Основные",
         productsList: productsMain
       });
       break;
@@ -46,7 +46,7 @@ exports.products_list = asyncHandler(async (req, res, next) => {
       });;
 
       res.json({
-        title: "ProductForEmployersList",
+        title: "Для персонала",
         productsList: productsForEmployers
       });
       break;
@@ -122,7 +122,7 @@ exports.products_list = asyncHandler(async (req, res, next) => {
 
     
       res.json({
-        title: "ProductsDeposit",
+        title: "Пополнение депозита",
         productsList: productsDeposit,
         organizations: organizations
       });

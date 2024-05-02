@@ -8,108 +8,127 @@ const OrganizationCustomer = require('../../models/organizationCustomer');
 const Payee = require('../../models/payee');
 const PriceDefinition = require('../../models/priceDefinition');
 const Product = require('../../models/product');
-
 const dateFns = require('date-fns');
 
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
+    try {
     const organizationList = await getOrganizationList(accountId);
-    const { Sequelize, Op } = require('sequelize');
 
-    const activeOrders = await Order.findAll({
-        where: {
-            accountId: accountId,
-            status: {
-                [Op.ne]: 'Получен'
-            }
-        },
-        include: [
-            {
-                model: TitleOrders,
-                include: 
-                [
-                    {
-                        model: PriceDefinition,
-                        as: 'price',
-                        attributes:
-                            [
-                                'priceAccess',
-                                'priceBooklet'
-                            ]
-                    }
-                ],
-                attributes: ['quantity', 'addBooklet'] // Добавляем addBooklet в атрибуты
+        const activeOrders = await Order.findAll({
+            where: {
+                accountId: accountId,
+                status: {
+                    [Op.ne]: 'Получен'
+                }
             },
-            {
-                model: OrganizationCustomer,
-                as: 'organization'
-            }
-        ],
-        attributes: {
             include: [
-                [
-                    Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
-                ],
-                [
-                    Sequelize.literal(`organizationName`), 'organizationName'
+                {
+                    model: TitleOrders,
+                    include: 
+                    [
+                        {
+                            model: PriceDefinition,
+                            as: 'price',
+                            attributes:
+                                [
+                                    'priceAccess',
+                                    'priceBooklet'
+                                ]
+                        }
+                    ],
+                    attributes: ['quantity', 'addBooklet'] // Добавляем addBooklet в атрибуты
+                },
+                {
+                    model: OrganizationCustomer,
+                    as: 'organization'
+                }
+            ],
+            attributes: {
+                include: [
+                    [
+                        Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                    ],
+                    [
+                        Sequelize.literal(`organizationName`), 'organizationName'
+                    ]
                 ]
-            ]
-        },
-        group: ['Order.id'],
-        raw: true
-    });
-    activeOrders.forEach(order => {
-        order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
-    });
-    res.json({
-        title: "active Orders list",
-        orders_list: activeOrders,
-        organizationList: organizationList
-    })
+            },
+            group: ['Order.id'],
+            raw: true
+        });
+    
+        activeOrders.forEach(order => {
+            order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
+        });
+    
+        res.json({
+            title: "Все активные заказы",
+            orders_list: activeOrders,
+            organizationList: organizationList
+        })
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Произошла ошибка при получении активных заказов' });
+    }
+    
 });
 
 exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
-    const finishedOrders = await Order.findAll({
-        where: {
-
-            accountId: accountId,
-            status: 'Получен'
-        },
-        include: [
-            {
-                model: TitleOrders, // Добавляем модель TitleOrders
-                include: [
-                    {
-                        model: PriceDefinition,
-                        as: 'price',
-                        attributes: ['priceAccess', 'priceBooklet']
-                    }
-                ],
-                attributes: ['quantity']
+    try {
+        const finishedOrders = await Order.findAll({
+            where: {
+    
+                accountId: accountId,
+                status: 'Получен'
             },
-            {
-                model: OrganizationCustomer,
-                as: 'organization'
-            }
-        ],
-        attributes: {
             include: [
-                [
-                    Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
-                ],
-                [
-                    Sequelize.literal(`organizationName`), 'organizationName'
+                {
+                    model: TitleOrders, // Добавляем модель TitleOrders
+                    include: [
+                        {
+                            model: PriceDefinition,
+                            as: 'price',
+                            attributes: ['priceAccess', 'priceBooklet']
+                        }
+                    ],
+                    attributes: ['quantity']
+                },
+                {
+                    model: OrganizationCustomer,
+                    as: 'organization'
+                }
+            ],
+            attributes: {
+                include: [
+                    [
+                        Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                    ],
+                    [
+                        Sequelize.literal(`organizationName`), 'organizationName'
+                    ]
                 ]
-            ]
-        },
-        group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
-        raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
-    });
-    res.json({
-        title: "finished Orders list",
-        orders_list: finishedOrders
-    })
+            },
+            group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
+            raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
+        });
+    
+        finishedOrders.forEach(order => {
+            order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
+        });
+        res.json({
+            title: "Все полученные заказы",
+            orders_list: finishedOrders
+        })
+    }
+
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Произошла ошибка при получении завершенных заказов' });
+    }
+    
 });
 
 
@@ -191,15 +210,16 @@ exports.admin_orders_list = asyncHandler(async (req, res, next) => {
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
 
-
+        orders.forEach(order => {
+            order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
+        });
         res.json({
-            title: "all Orders list",
+            title: "Все активные заказы пользователей",
             orders_list: orders
         });
     } catch (error) {
-        // Обработка ошибок
         console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching orders' });
+        res.status(500).json({ error: 'Произошла ошибка при получении активных заказов' });
     }
 });
 
@@ -274,62 +294,51 @@ exports.admin_archivedOrders_list = asyncHandler(async (req, res, next) => {
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
 
-
+        orders.forEach(order => {
+            order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
+        });
         res.json({
-            title: "all Orders list",
+            title: "Архивные заказы (Получен, Отменен)",
             orders_list: orders
         });
     } catch (error) {
-        // Обработка ошибок
         console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching orders' });
+        res.status(500).json({ error: 'Произошла ошибка при получении архивных заказов' });
     }
 });
 
 
 
-// Display detail page for a specific book.
 exports.user_order_detail = asyncHandler(async (req, res, next) => {
-    // Get details of books, book instances for specific book
-    const [order, titles, products] = await Promise.all([
-        Order.findByPk(req.params.orderId, {
-            include:
-                [
+    try {
+        const [order, titles, products] = await Promise.all([
+            Order.findByPk(req.params.orderId, {
+                include: [
                     {
-                        model: TitleOrders, // Добавляем модель TitleOrders
-                        include:
-                            [
-                                {
-                                    model: PriceDefinition,
-                                    as: 'price',
-                                    attributes:
-                                        [
-                                            'priceAccess', 'priceBooklet'
-                                        ]
-                                }
-                            ],
+                        model: TitleOrders,
+                        include: [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes: ['priceAccess', 'priceBooklet']
+                            }
+                        ],
                         attributes: ['quantity']
                     }
                 ],
-            attributes:
-            {
-                include:
-                    [
+                attributes: {
+                    include: [
                         [
                             Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
-
-
                     ]
-            },
-        }),
-        TitleOrders.findAll({
-            where:
-            {
-                orderId: req.params.orderId
-            },
-            include:
-                [
+                },
+            }),
+            TitleOrders.findAll({
+                where: {
+                    orderId: req.params.orderId
+                },
+                include: [
                     {
                         model: Product,
                         as: 'product',
@@ -338,64 +347,58 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes:
-                            [
-                                'priceAccess', 'priceBooklet'
-                            ]
+                        attributes: ['priceAccess', 'priceBooklet']
                     }
                 ],
-            attributes:
-            {
-                include:
-                    [
+                attributes: {
+                    include: [
                         [
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
                         ],
-
                         [
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
                         ],
                     ]
-            },
-        }),
-        Product.findAll({where: {productTypeId: { [Op.ne]: 4}}})
-    ]);
+                },
+            }),
+            Product.findAll({where: {productTypeId: { [Op.ne]: 4}}})
+        ]);
 
-    if (order.id === null) {
-        // No results.
-        const err = new Error("order not found");
-        err.status = 404;
-        return next(err);
+        if (order === null) {
+            // No results.
+            const err = new Error("Заказ не найден");
+            err.status = 404;
+            throw err;
+        }
+
+        res.json({
+            title: "Детали заказа",
+            order: order,
+            titles: titles,
+            products: products
+        });
+    } catch (error) {
+        console.error(error);
+        next(error); 
     }
-
-    res.json({
-        title: "orders details",
-        order: order,
-        titles: titles,
-        products: products
-    });
 });
 
 
 
 exports.admin_order_detail = asyncHandler(async (req, res, next) => {
-    const [order, titles] = await Promise.all([
-        Order.findByPk(req.params.orderId, {
-            include:
-                [
+    try {
+        const [order, titles] = await Promise.all([
+            Order.findByPk(req.params.orderId, {
+                include: [
                     {
-                        model: TitleOrders, // Добавляем модель TitleOrders
-                        include:
-                            [
-                                {
-                                    model: PriceDefinition,
-                                    as: 'price',
-                                    attributes:
-                                        [
-                                            'priceAccess', 'priceBooklet'
-                                        ]
-                                }
-                            ],
+                        model: TitleOrders,
+                        include: [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes: ['priceAccess', 'priceBooklet']
+                            }
+                        ],
                         attributes: ['quantity']
                     },
                     {
@@ -409,10 +412,8 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                         attributes: ['name']
                     }
                 ],
-            attributes:
-            {
-                include:
-                    [
+                attributes: {
+                    include: [
                         [
                             Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
@@ -423,15 +424,13 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                             Sequelize.literal(`organizationName`), 'organizationName'
                         ]
                     ]
-            }
-        }),
-        TitleOrders.findAll({
-            where:
-            {
-                orderId: req.params.orderId
-            },
-            include:
-                [
+                }
+            }),
+            TitleOrders.findAll({
+                where: {
+                    orderId: req.params.orderId
+                },
+                include: [
                     {
                         model: Product,
                         as: 'product',
@@ -440,17 +439,11 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                     {
                         model: PriceDefinition,
                         as: 'price',
-                        attributes:
-                            [
-                                'priceAccess',
-                                'priceBooklet'
-                            ]
+                        attributes: ['priceAccess', 'priceBooklet']
                     }
                 ],
-            attributes:
-            {
-                include:
-                    [
+                attributes: {
+                    include: [
                         [
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
                         ],
@@ -458,22 +451,27 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
                         ]
                     ]
-            }
-        })
-    ]);
+                }
+            })
+        ]);
 
-    if (order === null) {
-        // No results.
-        const err = new Error("order not found");
-        err.status = 404;
-        return next(err);
+        if (order === null) {
+            // No results.
+            const err = new Error("Заказ не найден");
+            err.status = 404;
+            throw err;
+        }
+
+        res.json({
+            title: "Детали заказа",
+            order: order,
+            titles: titles,
+        });
+    } 
+    catch (error) {
+        console.error(error);
+        next(error); 
     }
-
-    res.json({
-        title: "orders details",
-        order: order,
-        titles: titles,
-    });
 });
 
 
@@ -490,6 +488,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
 
 exports.user_order_create_post = [
 
+  
     body("quantity")
         .isInt({ min: 1 })
         .withMessage('Должно быть больше 0')
@@ -506,7 +505,7 @@ exports.user_order_create_post = [
             where: { productId: req.body.productId }
         });
 
-
+ 
         const productId = req.body.productId;
         const generation = req.body.generation;
         const accessType = req.body.addBooklet === true ? null : req.body.accessType;
@@ -546,7 +545,7 @@ exports.user_order_create_post = [
                 }
             ).catch(err => console.log(err));
             if (!order) {
-                return res.status(500).send('ERROR CREATING ORDER');
+                return res.status(500).send('Ошибка в создании заказа!');
             }
 
 
@@ -561,10 +560,10 @@ exports.user_order_create_post = [
                     priceDefId: priceDefinition.id
                 }
             )
-                .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
+                .then(() => res.status(200).send('Товар добавлен в заказ'))
                 .catch(err => {
                     console.log(err);
-                    res.status(500).send('ERROR CREATING TITLE');
+                    res.status(500).send('Ошибка в создании наименования!');
                 });
 
 
@@ -587,7 +586,7 @@ exports.user_order_create_post = [
                 }
             ).catch(err => console.log(err));
             if (!order) {
-                return res.status(500).send('ERROR CREATING ORDER');
+                return res.status(500).send('Ошибка в создании заказа!');
             }
 
 
@@ -602,10 +601,10 @@ exports.user_order_create_post = [
                     priceDefId: priceDefinition.id
                 }
             )
-                .then(() => res.status(200).send('PRODUCT ADDED TO TITLES'))
+                .then(() => res.status(200).send('Товар добавлен в заказ!'))
                 .catch(err => {
                     console.log(err);
-                    res.status(500).send('ERROR CREATING TITLE');
+                    res.status(500).send('Ошибка в создании наименования!');
                 });
         }
         else {
@@ -633,7 +632,7 @@ exports.user_order_create_post = [
                 .then(() => res.status(200).send('Товар успешно добавлен в заказ!'))
                 .catch(err => {
                     console.log(err);
-                    res.status(500).send('Не получилось добавить товар в заказ!');
+                    res.status(500).send('Ошибка в создании наименования!');
                 });
         }
     }),
@@ -930,3 +929,5 @@ async function ifProductTypeDeposit(productId) {
 //         return false;
 //     }
 // }
+
+

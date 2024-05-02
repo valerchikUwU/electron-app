@@ -12,9 +12,8 @@ exports.accrualRule_create_get = asyncHandler(async (req, res, next) => {
         ProductType.findAll()
     ]);
 
-    // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create accrualRule",
+        title: "Создание правила пополнения",
         allProducts: allProducts,
         allProductTypes: allProductTypes
     });
@@ -25,25 +24,29 @@ exports.accrualRule_create_post = [
 
 
     body("productTypeId")
-        .escape()
-        .optional({ checkFalsy: true }),
+        .if(body("productTypeId").exists())
+        .isNumeric()
+        .withMessage('Тип продукта должен быть числом')
+        .isIn([1, 2, 3])
+        .withMessage('Тип продукта может быть только 1, 2 или 3'),
     body("productId")
-        .escape()
-        .optional({ checkFalsy: true }),
+        .if(body("productId").exists())
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
     body("accessType")
-        .escape()
-        .optional({ checkFalsy: true }),
+        .optional({ checkFalsy: true })
+        .escape(),
     body("generation")
-        .escape()
-        .optional({ checkFalsy: true }),
-    body("commision", "commision must not be empty.")
+        .optional({ checkFalsy: true })
+        .escape(),
+    body("commision", "Размер комиссии должен быть указан!")
         .isInt({ min: 1 })
         .escape(),
     body().custom((value, { req }) => {
         if (!req.body.productTypeId && !req.body.productId) {
-            throw new Error('At least one of productTypeId or productId must be provided.');
+            throw new Error('Должен быть указан тип продукта или сам продукт!');
         }
-        // Возвращаем true, если условие выполнено
         return true;
     }),
 
@@ -51,7 +54,6 @@ exports.accrualRule_create_post = [
 
         const errors = validationResult(req);
 
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
 
         const rule = new AccrualRule({
             productTypeId: req.body.productTypeId,
@@ -63,19 +65,15 @@ exports.accrualRule_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-
 
             res.json({
                 rule: rule,
                 errors: errors.array(),
             });
-        } else {
-            // Data from form is valid. Save product.
+        } 
+        else {
             await rule.save();
-            // res.send({ success: true });
-            res.status(200).send('Created successfully').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
+            res.status(200).send('Правило начисления комиссии успешно создано!');
         }
     }),
 ];
@@ -89,31 +87,30 @@ exports.accrualRule_delete_get = asyncHandler(async (req, res, next) => {
 
     if (rule === null) {
 
-        res.status(404).send('No rule found').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
+        res.status(404).send('Такое правило не найдено!');
     }
 
     res.json({
-        title: "Delete rule",
+        title: "Удаление правила",
         rule: rule
     });
 });
 
 
 exports.accrualRule_delete = asyncHandler(async (req, res, next) => {
-    // Assume the post has valid id (ie no validation/sanitization).
+    
 
     const [rule] = await Promise.all([
         AccrualRule.findByPk(req.params.ruleId)
     ]);
 
     if (rule === null) {
-        // No results.
-        res.status(404).send('No rule found').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
+        res.status(404).send('Такое правило не найдено!');
     }
 
 
 
     await AccrualRule.destroy({ where: { id: req.params.ruleId } });
-    res.status(200).send('Deleted successfully').redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers/${req.params.receiverId}`);
+    res.status(200).send('Правило начисления комиссии успешно создано!');
 
 });

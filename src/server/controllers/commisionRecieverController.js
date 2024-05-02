@@ -33,7 +33,7 @@ exports.commisionReciever_list = asyncHandler(async (req, res, next) => {
         }
     );
     res.json({
-        title: "CommisionRecievers list",
+        title: "Список получателей комиссии",
         allCommisionRecievers: allCommisionRecievers
     })
 });
@@ -47,15 +47,14 @@ exports.commisionReciever_rules_details = asyncHandler(async (req, res, next) =>
     ]);
 
     if (commisionReciever === null) {
-        // No results.
-        const err = new Error("commisionReciever not found");
+        const err = new Error("Такой получатель комиссии не найден!");
         err.status = 404;
         return next(err);
     }
 
 
     res.json({
-        title: commisionReciever.name,
+        title: `Правила начисления получателя комиссии ${commisionReciever.name}`,
         commisionReciever: commisionReciever,
         allRules: allRules
     });
@@ -81,6 +80,17 @@ exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) 
                                     {
                                         model: TitleOrders
                                         
+
+/**
+                                         * use co06635_acad;
+            SELECT SUM(A.commision * titles.quantity) AS totalCommission
+            FROM AccrualRules A
+            JOIN TitleOrders titles ON A.productId = titles.productId
+            WHERE A.productId IN (SELECT DISTINCT productId FROM TitleOrders)
+            AND (A.accessType IS NULL OR A.accessType = titles.accessType)
+            AND (A.generation IS NULL OR A.generation = titles.generation);
+            
+                                         */
                                     }
                                 ]
                         },
@@ -101,8 +111,9 @@ exports.commisionReciever_balance_details = asyncHandler(async (req, res, next) 
     }
 
     res.json({
-        title: "balance details",
-        commisionReceiver: commisionReceiver
+        title: `Баланс получателя комиссии ${commisionReceiver.name}`,
+        commisionReceiver: commisionReceiver,
+        rules: rules
     });
 });
 
@@ -112,7 +123,7 @@ exports.commisionReciever_create_get = asyncHandler(async (req, res, next) => {
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create commisionReciever",
+        title: "Форма создания получателя комиссии",
     });
 });
 
@@ -120,7 +131,7 @@ exports.commisionReciever_create_get = asyncHandler(async (req, res, next) => {
 exports.commisionReciever_create_post = [
 
 
-    body("commisionRecieverName", "commisionRecieverName must not be empty.")
+    body("commisionRecieverName", "Имя получателя комиссии должно быть указано!")
         .trim()
         .isLength({ min: 1 })
         .escape(),
@@ -130,40 +141,21 @@ exports.commisionReciever_create_post = [
 
         const errors = validationResult(req);
 
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
 
         const commisionReciever = new CommisionReciever({
             name: req.body.commisionRecieverName,
         });
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-
-
             res.json({
                 commisionReciever: commisionReciever,
                 errors: errors.array(),
             });
         } else {
-            // Data from form is valid. Save product.
             await commisionReciever.save();
-            // res.send({ success: true });
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/commisionRecievers`);
+            res.status(200).send('Получатель комиссии успешно создан!');
         }
     }),
 ];
 
 
-
-
-/**
-                                         * use co06635_acad;
-            SELECT SUM(A.commision * titles.quantity) AS totalCommission
-            FROM AccrualRules A
-            JOIN TitleOrders titles ON A.productId = titles.productId
-            WHERE A.productId IN (SELECT DISTINCT productId FROM TitleOrders)
-            AND (A.accessType IS NULL OR A.accessType = titles.accessType)
-            AND (A.generation IS NULL OR A.generation = titles.generation);
-            
-                                         */

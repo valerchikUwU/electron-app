@@ -16,29 +16,39 @@ exports.user_titleOrder_update_put = [
 
 
     // Validate and sanitize fields.
-    body("productId", "productId must be chosen")
+    body("titlesToUpdate.*.productId", "productId must be chosen")
         .if(body("productId").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("accessType", "accessType must be choses")
+    body("titlesToUpdate.*.accessType", "accessType must be choses")
         .if(body("accessType").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("generation", "generation must be chosen")
+    body("titlesToUpdate.*.generation", "generation must be chosen")
         .if(body("generation").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("quantity", "quantity must be written")
+    body("titlesToUpdate.*.quantity", "quantity must be written")
         .if(body("quantity").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("addBooklet")
+    body("titlesToUpdate.*.addBooklet")
         .if(body("addBooklet").exists())
         .escape(),
+    body().custom((value, { req }) => {
+        const titlesToUpdate = req.body.titlesToUpdate;
+        for (const title of titlesToUpdate) {
+            if (title.addBooklet === 1 && title.accessType !== null) {
+                throw new Error('Буклет представлен только в виде бумажного формата!');
+            }
+        }
+        // Возвращаем true, если условие выполнено
+        return true;
+    }),
 
 
     asyncHandler(async (req, res, next) => {
@@ -87,7 +97,6 @@ exports.user_titleOrder_update_put = [
                     if (title.quantity)
                         oldTitle.quantity = title.quantity;
 
-                    console.log(oldTitle);
                     await oldTitle.save();
                 }
             }
@@ -133,30 +142,39 @@ exports.admin_titleOrder_update_put = [
     body("payeeId")
         .optional({ checkFalsy: true })
         .escape(),
-    body("productId")
+    body("titlesToUpdate.*.productId")
         .if(body("productId").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("accessType")
+    body("titlesToUpdate.*.accessType")
         .if(body("accessType").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("generation")
+    body("titlesToUpdate.*.generation")
         .if(body("generation").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("quantity")
+    body("titlesToUpdate.*.quantity")
         .if(body("quantity").exists())
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body("addBooklet")
+    body("titlesToUpdate.*.addBooklet")
         .if(body("addBooklet").exists())
         .escape(),
-
+    body().custom((value, { req }) => {
+        const titlesToUpdate = req.body.titlesToUpdate;
+        for (const title of titlesToUpdate) {
+            if (title.addBooklet === 1 && title.accessType !== null) {
+                throw new Error('Буклет представлен только в виде бумажного формата!');
+            }
+        }
+        // Возвращаем true, если условие выполнено
+        return true;
+    }),
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
@@ -193,7 +211,7 @@ exports.admin_titleOrder_update_put = [
             return;
         } else {
 
-            
+
             const oldOrder = await Order.findByPk(req.params.orderId);
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = order.status;
@@ -215,8 +233,11 @@ exports.admin_titleOrder_update_put = [
                         if (title.accessType)
                             oldTitle.accessType = title.accessType;
                     }
-                    if (title.productId)
+                    if (title.productId) {
                         oldTitle.productId = title.productId;
+                        const priceDef = await PriceDefinition.findOne({ where: { productId: title.productId } });
+                        oldTitle.priceDefId = priceDef.id
+                    }
 
                     if (title.generation)
                         oldTitle.generation = title.generation;
@@ -224,7 +245,6 @@ exports.admin_titleOrder_update_put = [
                     if (title.quantity)
                         oldTitle.quantity = title.quantity;
 
-                    console.log(oldTitle);
                     await oldTitle.save();
                 }
             }

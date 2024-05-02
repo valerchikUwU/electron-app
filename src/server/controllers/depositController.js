@@ -69,7 +69,7 @@ exports.deposits_list = asyncHandler(async (req, res, next) => {
     });
 
     res.json({
-        title: "organizations list",
+        title: "Список депозитов организаций",
         organizations: organizations
     });
 });
@@ -140,13 +140,13 @@ exports.deposits_details = asyncHandler(async (req, res, next) => {
 
     if (organization.id === null) {
         // No results.
-        const err = new Error("organization not found");
+        const err = new Error("Такая организация не найдена");
         err.status = 404;
         return next(err);
     }
 
     res.json({
-        title: "deposits details",
+        title: `История депозитов организации ${organization.organizationName}`,
         organization: organization,
         orders: orders,
     });
@@ -160,9 +160,8 @@ exports.deposit_create_get = asyncHandler(async (req, res, next) => {
         OrganizationCustomer.findAll()
     ]);
 
-    // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create deposit",
+        title: "Форма создания депозита",
         organizations: allOrganizations
     });
 });
@@ -171,7 +170,7 @@ exports.deposit_create_post = [
 
 
 
-    body("organizationCustomerId", "Organization must not be empty.")
+    body("oraganizationName", "Должна быть указана организация")
         .trim()
         .isLength({ min: 1 })
         .escape(),
@@ -185,18 +184,19 @@ exports.deposit_create_post = [
         if (!req.body.withdraw && !req.body.deposit) {
             throw new Error('At least one of deposit or withdraw must be provided.');
         }
-        // Возвращаем true, если условие выполнено
         return true;
     }),
 
 
     asyncHandler(async (req, res, next) => {
-        // Extract the validation errors from a request.
         const errors = validationResult(req);
-        // Create a Book object with escaped and trimmed data.
+        const organizationCustomer = await OrganizationCustomer.findOne({
+            where: { organizationName: req.body.organizationName }
+        });
         const order = new Order({
-            organizationCustomerId: req.body.organizationCustomerId,
+            organizationCustomerId: organizationCustomer.id,
             status: 'Активный',
+            dispatchDate: new Date(),
             createdBySupAdm: 1
         });
         console.log(order)
@@ -204,21 +204,19 @@ exports.deposit_create_post = [
         const priceDef = await PriceDefinition.findOne({ where: { productId: deposit.id } })
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-            // Get all authors and genres for form.
             const [allOrganizations] = await Promise.all([
                 OrganizationCustomer.findAll()
             ]);
 
 
             res.json({
-                title: "Create deposit",
+                title: "Создание депозита",
                 allOrganizations: allOrganizations,
                 order: order,
                 errors: errors.array(),
             });
-        } else {
+        } 
+        else {
             try {
                 await order.save();
                 await TitleOrders.create({
@@ -229,11 +227,10 @@ exports.deposit_create_post = [
                 });
             } catch (error) {
                 console.error('Ошибка при сохранении заказа или создании записи в TitleOrders:', error);
-                // Здесь можно добавить дополнительную логику обработки ошибок, например, отправку ответа с ошибкой клиенту
+                
                 res.status(500).json({ message: 'Произошла ошибка при обработке запроса', error: error.message })
             };
-            //не работает редирект
-            res.redirect(`http://localhost:3000/api/:accountId/deposits/${req.params.organizationCustomerId}`);
+            res.status(200).send('Депозит успешно создан!');
         }
     }),
 ];

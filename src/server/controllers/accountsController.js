@@ -5,10 +5,11 @@ const Account = require('../../models/account');
 const OrganizationCustomer = require('../../models/organizationCustomer');
 const Role = require('../../models/role');
 
+
 exports.accounts_list = asyncHandler(async (req, res, next) => {
     const accounts = await Account.findAll({ where: { roleId: 3 }, raw: true })
     res.json({
-        title: "accounts list",
+        title: "Список аккаунтов",
         accounts: accounts
     });
 }
@@ -24,7 +25,7 @@ exports.superAdmin_accounts_list = asyncHandler(async (req, res, next) => {
         raw: true
     });
     res.json({
-        title: "accounts list",
+        title: "Список аккаунтов",
         accounts: accounts
     });
 }
@@ -38,13 +39,13 @@ exports.account_detail = asyncHandler(async (req, res, next) => {
 
     if (account === null) {
         // No results.
-        const err = new Error("Account not found");
+        const err = new Error("Такой аккаунт не найден");
         err.status = 404;
         return next(err);
     }
 
     res.json({
-        title: account.telephoneNumber,
+        title: `Детали аккаунта с номером телефона: ${account.telephoneNumber}`,
         account: account,
     });
 });
@@ -59,7 +60,7 @@ exports.account_organization_create_get = asyncHandler(async (req, res, next) =>
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create Account",
+        title: "Форма создания аккаунта для админа",
         organizations: allOrganizations
     });
 });
@@ -76,18 +77,24 @@ exports.account_organization_create_post = [
         next();
     },
 
-    body("firstName", "First name must not be empty.")
+    body("firstName", "Имя должно быть указано!")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("lastName", "LastName must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Имя может содержать только русские буквы и пробелы'),
+    body("lastName", "Фамилия должна быть указана!")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("telephoneNumber", "TelephoneNumber must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Фамилия может содержать только русские буквы и пробелы'),
+    body("telephoneNumber", "Номер телефона должен быть указан!")
         .trim()
-        .isLength({ min: 1 })
-        .escape(),
+        .isLength({ min: 10 })
+        .escape()
+        .matches(/^\+7\d{10}$/, 'ru-RU')
+        .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
     body("organizationList.*").escape(),
 
 
@@ -99,7 +106,6 @@ exports.account_organization_create_post = [
 
         const errors = validationResult(req);
 
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
         for (const organization of req.body.organizationList) {
             if (await OrganizationCustomer.findOne({ where: { organizationName: organization } }) === null) {
                 const org = await OrganizationCustomer.create(
@@ -123,9 +129,6 @@ exports.account_organization_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-            // Get all types for form.
             const [allOrganizations] = await Promise.all([
                 OrganizationCustomer.findAll({ order: [['name']] })
             ]);
@@ -137,10 +140,8 @@ exports.account_organization_create_post = [
                 errors: errors.array(),
             });
         } else {
-            // Data from form is valid. Save product.
             await account.save();
-            // res.send({ success: true });
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/accounts`);
+            res.status(200).send('Аккаунт успешно создан!');
         }
     }),
 ];
@@ -149,9 +150,6 @@ exports.account_organization_create_post = [
 
 
 exports.superAdmin_account_organization_create_get = asyncHandler(async (req, res, next) => {
-    // Используем Promise.all для параллельного выполнения запросов к базе данных.
-    // В данном случае, выполняем запрос к таблице ProductType,
-    // чтобы получить все типы продуктов, отсортированные по id и name.
     const [allOrganizations, allRoles] = await Promise.all([
         OrganizationCustomer.findAll({ order: [['name']] }),
         Role.findAll({
@@ -162,10 +160,8 @@ exports.superAdmin_account_organization_create_get = asyncHandler(async (req, re
             }
         })
     ]);
-
-    // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
-        title: "Create Account",
+        title: "Форма создания аккаунта для суперАдмина",
         organizations: allOrganizations,
         allRoles: allRoles
     });
@@ -182,24 +178,29 @@ exports.superAdmin_account_organization_create_post = [
         next();
     },
 
-    body("firstName", "First name must not be empty.")
+    body("firstName", "Имя должно быть указано!")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("lastName", "LastName must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Имя может содержать только русские буквы и пробелы'),
+    body("lastName", "Фамилия должна быть указана!")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("telephoneNumber", "TelephoneNumber must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Фамилия может содержать только русские буквы и пробелы'),
+    body("telephoneNumber", "Номер телефона должен быть указан!")
         .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("roleId", "role must be chosen")
+        .isLength({ min: 10 })
+        .escape()
+        .matches(/^\+7\d{10}$/, 'ru-RU')
+        .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
+    body("roleId", "Роль должна быть выбрана!")
         .isIn([2, 3])
         .isLength({ min: 1 })
         .escape(),
     body("organizationList.*").escape(),
-
 
 
 
@@ -209,7 +210,6 @@ exports.superAdmin_account_organization_create_post = [
 
         const errors = validationResult(req);
 
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
         for (const organization of req.body.organizationList) {
             if (await OrganizationCustomer.findOne({ where: { organizationName: organization } }) === null) {
                 const org = await OrganizationCustomer.create(
@@ -233,9 +233,6 @@ exports.superAdmin_account_organization_create_post = [
         });
 
         if (!errors.isEmpty()) {
-            // There are errors. Render form again with sanitized values/error messages.
-
-            // Get all types for form.
             const [allOrganizations, allRoles] = await Promise.all([
                 OrganizationCustomer.findAll({ order: [['name']] }),
                 Role.findAll({
@@ -255,10 +252,8 @@ exports.superAdmin_account_organization_create_post = [
                 errors: errors.array(),
             });
         } else {
-            // Data from form is valid. Save product.
             await account.save();
-            // res.send({ success: true });
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/superAdmin/accounts`);
+            res.status(200).send('Аккаунт успешно создан!');
         }
     }),
 ];
@@ -266,24 +261,14 @@ exports.superAdmin_account_organization_create_post = [
 
 
 
-// ТУТ ДОДЕЛАТЬ
 exports.account_update_get = asyncHandler(async (req, res, next) => {
     const [account, allOrganizations] = await Promise.all([
-        Account.findByPk(req.params.accountFocusId,
-            {
-                include:
-                    [
-                        {
-                            model: OrganizationCustomer,
-                            as: 'organizations'
-                        }
-                    ]
-            }),
-        OrganizationCustomer.findAll()
+        Account.findByPk(req.params.accountFocusId),
+        getOrganizationList(req.params.accountFocusId)
     ]);
 
     if (!account) {
-        const err = new Error("Account not found");
+        const err = new Error("Аккаунт не найден!");
         err.status = 404;
         return next(err);
     }
@@ -291,7 +276,7 @@ exports.account_update_get = asyncHandler(async (req, res, next) => {
 
 
     res.json({
-        title: "Update account",
+        title: "Форма обновления аккаунта для админа",
         organizations: allOrganizations,
         account: account,
     });
@@ -301,30 +286,32 @@ exports.account_update_get = asyncHandler(async (req, res, next) => {
 exports.account_update_put = [
 
 
-    // Validate and sanitize fields.
-    body("firstName", "First name must not be empty.")
+    body("firstName")
+        .if(body("firstName").exists())
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("lastName", "LastName must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Имя может содержать только русские буквы и пробелы'),
+    body("lastName")
+        .if(body("lastName").exists())
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body("telephoneNumber", "TelephoneNumber must not be empty.")
+        .escape()
+        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        .withMessage('Фамилия может содержать только русские буквы и пробелы'),
+    body("telephoneNumber")
+        .if(body("telephoneNumber").exists())
         .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("telegramId")
-        .optional({ checkFalsy: true }) // Поле является необязательным
-        .trim() // Удаляем пробелы в начале и конце строки
-        .isLength({ min: 1 }) // Проверяем, что длина строки больше 0, если поле предоставлено
-        .escape(), // Экранируем специальные символы
+        .isLength({ min: 10 })
+        .escape()
+        .matches(/^\+7\d{10}$/, 'ru-RU')
+        .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
     body("organizationList.*").escape(),
 
 
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
-        // const formattedDate = format(new Date(), 'dd:MM:yyyy');
         const account = new Account({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
@@ -341,7 +328,7 @@ exports.account_update_put = [
 
 
             res.json({
-                title: "Update Account",
+                title: "Форма ввода некорректна, повторите попытку!",
                 organizations: allOrganizations,
                 account: account,
                 errors: errors.array(),
@@ -358,7 +345,22 @@ exports.account_update_put = [
 
             await oldAccount.save();
 
-            res.redirect(`http://localhost:3000/api/${req.params.accountId}/accounts`);
+            res.status(200).send('Аккаунт успешно обновлен!');
         }
     }),
 ];
+
+
+
+
+async function getOrganizationList(accountId) {
+    try {
+        const account = await Account.findByPk(accountId);
+        if (!account) {
+            throw new Error('Account not found');
+        }
+        return account.organizationList;
+    } catch (error) {
+        console.error(error);
+    }
+}
