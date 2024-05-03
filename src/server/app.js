@@ -2,11 +2,33 @@
 require('dotenv').config();
 const express = require('express');
 const compression = require("compression");
+const cors = require('cors');
 const helmet = require("helmet");
 const authRoutes = require('./routes/authRoutes');
 const allRoutes = require('./routes/allRoutes');
-
 const app = express();
+const swaggerJSDoc = require('swagger-jsdoc');
+
+
+
+const swaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'Express API for JSONPlaceholder',
+    version: '1.0.0',
+  },
+};
+
+const options = {
+  swaggerDefinition,
+  // Paths to files containing OpenAPI definitions
+  apis: ['./routes/*.js'],
+};
+
+
+const swaggerSpec = swaggerJSDoc(options);
+
+
 
 // Set up rate limiter: maximum of twenty requests per minute
 const RateLimit = require("express-rate-limit");
@@ -17,7 +39,8 @@ const limiter = RateLimit({
 // Apply rate limiter to all requests
 app.use(limiter);
 
-
+// Включаем CORS для всех маршрутов
+app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
@@ -39,7 +62,6 @@ app.use(function (req, res, next) {
     res.status(500).send(res.locals.message || 'Internal Server Error');
   });
 
-//СМОТРЕЛ middleware ОБРАБОТЧИК ОШИБОК И ОСТАНОВИЛСЯ НА TRY CATCH в OrdersController 
 
 // Запуск Express сервера
 const PORT = process.env.SERVER_PORT;

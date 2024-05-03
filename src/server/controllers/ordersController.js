@@ -13,7 +13,7 @@ const dateFns = require('date-fns');
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
     try {
-    const organizationList = await getOrganizationList(accountId);
+        const organizationList = await getOrganizationList(accountId);
 
         const activeOrders = await Order.findAll({
             where: {
@@ -25,18 +25,18 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
             include: [
                 {
                     model: TitleOrders,
-                    include: 
-                    [
-                        {
-                            model: PriceDefinition,
-                            as: 'price',
-                            attributes:
-                                [
-                                    'priceAccess',
-                                    'priceBooklet'
-                                ]
-                        }
-                    ],
+                    include:
+                        [
+                            {
+                                model: PriceDefinition,
+                                as: 'price',
+                                attributes:
+                                    [
+                                        'priceAccess',
+                                        'priceBooklet'
+                                    ]
+                            }
+                        ],
                     attributes: ['quantity', 'addBooklet'] // Добавляем addBooklet в атрибуты
                 },
                 {
@@ -57,11 +57,11 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
             group: ['Order.id'],
             raw: true
         });
-    
+
         activeOrders.forEach(order => {
             order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
         });
-    
+
         res.json({
             title: "Все активные заказы",
             orders_list: activeOrders,
@@ -72,7 +72,7 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         console.error(error);
         res.status(500).json({ error: 'Произошла ошибка при получении активных заказов' });
     }
-    
+
 });
 
 exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
@@ -80,7 +80,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     try {
         const finishedOrders = await Order.findAll({
             where: {
-    
+
                 accountId: accountId,
                 status: 'Получен'
             },
@@ -114,7 +114,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
             group: ['Order.id'], // Группируем результаты по id Order, чтобы суммирование работало корректно
             raw: true // Возвращаем сырые данные, так как мы используем агрегатные функции
         });
-    
+
         finishedOrders.forEach(order => {
             order.formattedDispatchDate = order.dispatchDate ? dateFns.format(order.dispatchDate, 'dd-MM-yyyy') : null;
         });
@@ -128,7 +128,7 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
         console.error(error);
         res.status(500).json({ error: 'Произошла ошибка при получении завершенных заказов' });
     }
-    
+
 });
 
 
@@ -361,7 +361,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                     ]
                 },
             }),
-            Product.findAll({where: {productTypeId: { [Op.ne]: 4}}})
+            Product.findAll({ where: { productTypeId: { [Op.ne]: 4 } } })
         ]);
 
         if (order.id === null) {
@@ -379,7 +379,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
         });
     } catch (error) {
         console.error(error);
-        next(error); 
+        next(error);
     }
 });
 
@@ -467,10 +467,10 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             order: order,
             titles: titles,
         });
-    } 
+    }
     catch (error) {
         console.error(error);
-        next(error); 
+        next(error);
     }
 });
 
@@ -488,7 +488,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
 
 exports.user_order_create_post = [
 
-  
+
     body("quantity")
         .isInt({ min: 1 })
         .withMessage('Должно быть больше 0')
@@ -505,10 +505,10 @@ exports.user_order_create_post = [
             where: { productId: req.body.productId }
         });
 
- 
+
         const productId = req.body.productId;
         const generation = req.body.generation;
-        const accessType = req.body.addBooklet === true ? null : req.body.accessType;
+        const accessType = req.body.addBooklet === 1 ? null : req.body.accessType;
         const addBooklet = req.body.addBooklet
         const quantity = req.body.quantity;
         const accountId = req.params.accountId;
@@ -519,16 +519,15 @@ exports.user_order_create_post = [
         const isDepositProduct = await ifProductTypeDeposit(productId);
         if (isDepositProduct) {
 
-            const draftOrder = await Order.findOne({ 
-                where: 
-                { 
-                    status: 'Черновик депозита', 
+            const draftOrder = await Order.findOne({
+                where:
+                {
+                    status: 'Черновик депозита',
                     accountId: accountId
-                }, 
-                    raw: true 
+                },
+                raw: true
             })
-            if(draftOrder !== null)
-            {
+            if (draftOrder !== null) {
                 res.send('Измените черновик депозита!')
             }
 
@@ -654,11 +653,11 @@ exports.admin_order_create_get = asyncHandler(async (req, res, next) => {
 
 exports.admin_order_create_post = [
 
-    
 
-    body("accountId", "Заказчик должен быть указан")
+
+    body("accountId")
+        .optional({ checkFalsy: true })
         .trim()
-        .isLength({ min: 1 })
         .escape(),
     body("organization", "Организация должна быть указана")
         .trim()
