@@ -39,17 +39,17 @@ exports.user_titleOrder_update_put = [
     body("titlesToUpdate.*.addBooklet")
         .if(body("addBooklet").exists())
         .escape(),
-    body().custom((value, { req }) => {
-        const titlesToUpdate = req.body.titlesToUpdate;
-        for (const title of titlesToUpdate) {
-            // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
-            if (title.addBooklet === true && (title.accessType === 'Бумажный' || title.accessType === 'Электронный')) {
-                throw new Error('Если выбран буклет, тип доступа недоступен!');
-            }
-        }
-        // Возвращаем true, если условие выполнено
-        return true;
-    }),
+    // body().custom((value, { req }) => {
+    //     const titlesToUpdate = req.body.titlesToUpdate;
+    //     for (const title of titlesToUpdate) {
+    //         // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
+    //         if (title.addBooklet === true && (title.accessType === 'Бумажный' || title.accessType === 'Электронный')) {
+    //             throw new Error('Если выбран буклет, тип доступа недоступен!');
+    //         }
+    //     }
+    //     // Возвращаем true, если условие выполнено
+    //     return true;
+    // }),
 
 
     asyncHandler(async (req, res, next) => {
@@ -78,13 +78,7 @@ exports.user_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    if (title.addBooklet === true) {
-                        oldTitle.addBooklet = title.addBooklet;
-                        oldTitle.accessType = null;
-                    }
-                    else {
-                        oldTitle.addBooklet = title.addBooklet;
-                    }
+                    
                     if (title.accessType) {
                         oldTitle.accessType = title.accessType;
                     }
@@ -103,7 +97,13 @@ exports.user_titleOrder_update_put = [
                     if (title.quantity) {
                         oldTitle.quantity = title.quantity;
                     }
-
+                    if (title.addBooklet === true) {
+                        oldTitle.addBooklet = title.addBooklet;
+                        oldTitle.accessType = null;
+                    }
+                    else {
+                        oldTitle.addBooklet = title.addBooklet;
+                    }
                     await oldTitle.save();
                 }
             }
