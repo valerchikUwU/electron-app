@@ -9,6 +9,8 @@ const allRoutes = require('./routes/allRoutes');
 const app = express();
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const API_ROOT = process.env.API_ROOT;
+
 
 const swaggerDefinition = {
   openapi: '3.0.0',
@@ -28,7 +30,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: `http://localhost:3000/api`,
+      url: API_ROOT,
       description: 'Development server',
     },
   ],
@@ -45,14 +47,14 @@ const swaggerSpec = swaggerJSDoc(options);
 
 
 
-// Set up rate limiter: maximum of twenty requests per minute
-const RateLimit = require("express-rate-limit");
-const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 20,
-});
-// Apply rate limiter to all requests
-app.use(limiter);
+// // Set up rate limiter: maximum of twenty requests per minute
+// const RateLimit = require("express-rate-limit");
+// const limiter = RateLimit({
+//   windowMs: 1 * 60 * 1000, // 1 minute
+//   max: 20,
+// });
+// // Apply rate limiter to all requests
+// app.use(limiter);
 
 
 // Включаем CORS для всех маршрутов
