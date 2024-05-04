@@ -42,8 +42,9 @@ exports.user_titleOrder_update_put = [
     body().custom((value, { req }) => {
         const titlesToUpdate = req.body.titlesToUpdate;
         for (const title of titlesToUpdate) {
-            if (title.addBooklet === 1 && title.accessType !== undefined) {
-                throw new Error('Буклет представлен только в виде бумажного формата!');
+            // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
+            if (title.addBooklet === true && (title.accessType === 'Бумажный' || title.accessType === 'Электронный')) {
+                throw new Error('Если выбран буклет, тип доступа недоступен!');
             }
         }
         // Возвращаем true, если условие выполнено
@@ -238,7 +239,7 @@ exports.admin_titleOrder_update_put = [
                         oldTitle.addBooklet = title.addBooklet;
                     }
                     if (title.accessType) {
-                            oldTitle.accessType = title.accessType;
+                        oldTitle.accessType = title.accessType;
                     }
                     if (title.productId) {
                         oldTitle.productId = title.productId;
