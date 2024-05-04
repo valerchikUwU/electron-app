@@ -42,8 +42,8 @@ const createWindow = () => {
     },
   });
 
-  mainWindow.loadFile('C:\\Users\\koval\\electron-store-app\\electron-app\\src\\index.html');
-
+  // mainWindow.loadFile('C:\\Users\\koval\\electron-store-app\\electron-app\\src\\index.html');
+  mainWindow.loadURL('http://localhost:3000');
   mainWindow.webContents.openDevTools()
 };
 
