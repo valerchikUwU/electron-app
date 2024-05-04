@@ -78,7 +78,7 @@ exports.user_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    if (title.addBooklet === 1) {
+                    if (title.addBooklet === true) {
                         oldTitle.addBooklet = title.addBooklet;
                         oldTitle.accessType = null;
                     }
