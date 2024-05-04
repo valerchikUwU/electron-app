@@ -8,21 +8,36 @@ const authRoutes = require('./routes/authRoutes');
 const allRoutes = require('./routes/allRoutes');
 const app = express();
 const swaggerJSDoc = require('swagger-jsdoc');
-
-
+const swaggerUi = require('swagger-ui-express');
 
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'Express API for JSONPlaceholder',
+    title: 'Express API for electron-app',
     version: '1.0.0',
+    description:
+      'This is a REST API application made with Express. It retrieves data from electron-app.',
+    license: {
+      name: 'Licensed Under MIT',
+      url: 'https://spdx.org/licenses/MIT.html',
+    },
+    contact: {
+      name: 'electron-app',
+      url: 'https://jsonplaceholder.typicode.com',
+    },
   },
+  servers: [
+    {
+      url: `http://localhost:3000/api`,
+      description: 'Development server',
+    },
+  ],
 };
 
 const options = {
   swaggerDefinition,
   // Paths to files containing OpenAPI definitions
-  apis: ['./routes/*.js'],
+  apis: ['C:/Users/koval/electron-store-app/electron-app/src/server/routes/*.js'],
 };
 
 
@@ -39,19 +54,18 @@ const limiter = RateLimit({
 // Apply rate limiter to all requests
 app.use(limiter);
 
+
 // Включаем CORS для всех маршрутов
 app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', authRoutes);
 app.use('/api', allRoutes );
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-    next(createError(404));
-  });
+
   
   // error handler
   app.use(function (err, req, res, next) {
