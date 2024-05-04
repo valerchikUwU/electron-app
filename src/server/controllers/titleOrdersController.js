@@ -39,17 +39,17 @@ exports.user_titleOrder_update_put = [
     body("titlesToUpdate.*.addBooklet")
         .if(body("addBooklet").exists())
         .escape(),
-    // body().custom((value, { req }) => {
-    //     const titlesToUpdate = req.body.titlesToUpdate;
-    //     for (const title of titlesToUpdate) {
-    //         // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
-    //         if (title.addBooklet === true && (title.accessType === 'Бумажный' || title.accessType === 'Электронный')) {
-    //             throw new Error('Если выбран буклет, тип доступа недоступен!');
-    //         }
-    //     }
-    //     // Возвращаем true, если условие выполнено
-    //     return true;
-    // }),
+    body().custom((value, { req }) => {
+        const titlesToUpdate = req.body.titlesToUpdate;
+        for (const title of titlesToUpdate) {
+            // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
+            if (title.addBooklet === false && title.accessType === undefined) {
+                throw new Error('Выберите тип доступа!');
+            }
+        }
+        // Возвращаем true, если условие выполнено
+        return true;
+    }),
 
 
     asyncHandler(async (req, res, next) => {
