@@ -14,6 +14,8 @@ router.post('/auth', async (req, res) => {
             const foundNumber = await getTelephoneNumber(phoneNumber);
             if (foundNumber) {                
                 Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
+                const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
+                req.session.accountId = account.id;
                 res.redirect(`${apiRoot}/auth-status`);
             } 
             else {
@@ -25,7 +27,10 @@ router.post('/auth', async (req, res) => {
 startBot();
 
 router.get('/auth-status', async (req, res) => {
-    res.json({success: true})
+    res.json({
+        success: true,
+        id: req.session.accountId
+    })
 })
 
 async function getTelephoneNumber(telephoneNumber) {
