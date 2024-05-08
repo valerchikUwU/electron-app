@@ -3,40 +3,43 @@ const { startBot } = require('../../utils/tgBotLogic');
 const  Account  = require('../../models/account');
 const express = require('express');
 const router = express.Router();
-
+const url = require('url');
 
 const apiRoot = process.env.API_ROOT;
 // Маршрут для обработки запросов от бота
 router.post('/auth', async (req, res) => {
-            const phoneNumber = req.body.phone;
-            const id = req.body.id;
-            // Здесь вы проверяете номер телефона в базе данных
-            const foundNumber = await getTelephoneNumber(phoneNumber);
-            if (foundNumber) {                
-                Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
-                const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
-                res.redirect(`${apiRoot}/${account.id}/auth-status`);
-            } 
-            else {
-            res.status(404);
-            }
-       });
+    const phoneNumber = req.body.phone;
+    const id = req.body.id;
+    // Здесь вы проверяете номер телефона в базе данных
+    const foundNumber = await getTelephoneNumber(phoneNumber);
+    if (foundNumber) {                
+        Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
+        const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
+        const accountId = account.id
+        // Передаем accountId через URL
+        res.redirect(`${apiRoot}/auth-status?accountId=${encodeURIComponent(accountId)}`);
+    } else {
+        res.status(404).send('Номер телефона не найден');
+    }
+});
 
 // Запуск бота
 startBot();
 
-router.get('/:accountId/auth-status', async (req, res) => {
-    const accountId = req.params.accountId;
+router.get('/auth-status', async (req, res) => {
+    // Используем req.url для получения текущего URL запроса
+    const parsedUrl = url.parse(req.url, true);
+    const accountId = parsedUrl.query.accountId;
+    console.log(accountId);
     if(accountId === undefined){
         res.json({success: false});
-    }
-    else {
+    } else {
         res.json({
-        success: true,
-        id: accountId
-    })}
-    
-})
+            success: true,
+            id: accountId
+        });
+    }
+});
 
 async function getTelephoneNumber(telephoneNumber) {
     try {
