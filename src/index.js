@@ -43,8 +43,9 @@ const createWindow = () => {
   });
 
   // mainWindow.loadFile('C:\\Users\\koval\\electron-store-app\\electron-app\\src\\index.html');
-  mainWindow.loadURL('http://localhost:3000');
-  mainWindow.webContents.openDevTools()
+  // mainWindow.loadURL('http://localhost:3000');
+  mainWindow.webContents.openDevTools();
+  mainWindow.loadFile('C:/Users/koval/electron-store-app/react-app/build/index.html');
 };
 
 async function syncModels() {

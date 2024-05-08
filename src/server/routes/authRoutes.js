@@ -14,8 +14,7 @@ router.post('/auth', async (req, res) => {
             const foundNumber = await getTelephoneNumber(phoneNumber);
             if (foundNumber) {                
                 Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
-                const accountId = await Account.findOne({where:{telephoneNumber: foundNumber} })
-                res.send({ success: true });
+                res.redirect('http://localhost:3001/api/auth-status');
             } 
             else {
             res.send({ success: false });
@@ -25,6 +24,9 @@ router.post('/auth', async (req, res) => {
 // Запуск бота
 startBot();
 
+router.get('/auth-status', async (req, res) => {
+    res.json({success: true})
+})
 
 async function getTelephoneNumber(telephoneNumber) {
     try {

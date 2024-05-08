@@ -63,20 +63,29 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json());
 
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  // Здесь вы можете добавить логику для отправки событий об аутентификации
+  res.write(`data: ${JSON.stringify({ type: 'auth', success: true })}\n\n`);
+});
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', authRoutes);
 app.use('/api', allRoutes );
 
 
   
-  // error handler
-  app.use(function (err, req, res, next) {
-    console.error(err.stack); // Запись стека ошибки в консоль
-    res.locals.message = err.message;
-    res.locals.error = req.app.get("env") === "development" ? err : {};
+  // // error handler
+  // app.use(function (err, req, res, next) {
+  //   console.error(err.stack); // Запись стека ошибки в консоль
+  //   res.locals.message = err.message;
+  //   res.locals.error = req.app.get("env") === "development" ? err : {};
   
-    res.status(500).send(res.locals.message || 'Internal Server Error');
-  });
+  //   res.status(500).send(res.locals.message || 'Internal Server Error');
+  // });
 
 
 // Запуск Express сервера

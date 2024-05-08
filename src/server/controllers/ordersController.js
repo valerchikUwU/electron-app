@@ -528,7 +528,7 @@ exports.user_order_create_post = [
                 raw: true
             })
             if (draftOrder !== null) {
-                res.send('Измените черновик депозита!')
+                return res.status(400).send('Измените черновик депозита!')
             }
 
             const organizationCustomerId = await OrganizationCustomer.findOne({
@@ -903,7 +903,6 @@ async function getFirstOrganizationCustomerName(accountId) {
 async function ifProductTypeDeposit(productId) {
     const product = await Product.findByPk(productId);
     const productTypeId = parseInt(product.productTypeId, 10);
-    console.log(productTypeId);
     if (productTypeId === 4) {
         return true;
     }
