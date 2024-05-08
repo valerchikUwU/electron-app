@@ -27,8 +27,8 @@ router.post('/auth', async (req, res) => {
 startBot();
 
 router.get('/auth-status', async (req, res) => {
-    if(!req.session.accountId){
-        res.status(401).send('Вы еще не вошли!')
+    if(req.session.accountId === undefined){
+        res.json({success: false})
     }
     res.json({
         success: true,
