@@ -30,10 +30,12 @@ router.get('/auth-status', async (req, res) => {
     if(req.session.accountId === undefined){
         res.json({success: false})
     }
-    res.json({
+    else {
+        res.json({
         success: true,
         id: req.session.accountId
-    })
+    })}
+    
 })
 
 async function getTelephoneNumber(telephoneNumber) {
