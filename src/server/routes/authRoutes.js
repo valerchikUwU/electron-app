@@ -16,7 +16,7 @@ router.post('/auth', async (req, res) => {
                 Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
                 const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
                 req.session.accountId = account.id;
-                res.redirect(`${apiRoot}/auth-status`);
+                res.json({ success: true });
             } 
             else {
             res.send({ success: false });
