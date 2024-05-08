@@ -15,25 +15,25 @@ router.post('/auth', async (req, res) => {
             if (foundNumber) {                
                 Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
                 const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
-                req.session.accountId = account.id;
-                res.json({ success: true });
+                res.redirect(`${apiRoot}/${account.id}/auth-status`);
             } 
             else {
-            res.send({ success: false });
+            res.status(404);
             }
        });
 
 // Запуск бота
 startBot();
 
-router.get('/auth-status', async (req, res) => {
-    if(req.session.accountId === undefined){
-        res.json({success: false})
+router.get('/:accountId/auth-status', async (req, res) => {
+    const accountId = req.params.accountId;
+    if(accountId === undefined){
+        res.json({success: false});
     }
     else {
         res.json({
         success: true,
-        id: req.session.accountId
+        id: accountId
     })}
     
 })

@@ -12,6 +12,18 @@ const swaggerUi = require('swagger-ui-express');
 const API_ROOT = process.env.API_ROOT;
 const session = require('express-session');
 
+
+// Настройка сессии
+app.use(session({
+  secret: 'f1fa0c3806e41dc5413f116383d02b0ae431c5bcad417cf', // Секретный ключ для подписи сессии
+  resave: false, // Не сохранять сессию при каждом запросе, если она не изменилась
+  saveUninitialized: true, // Сохранять сессию, если она была инициализирована, но не изменена
+  cookie: { secure: false } // Установите secure в true, если используете HTTPS
+}));
+
+
+
+
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
@@ -63,13 +75,6 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json());
 
-// Настройка сессии
-app.use(session({
-  secret: 'f1f53b4ed3e8176cc39f44f6792cac982b0755d581b732aa659b2a52396f7b0b4d420abd01bcf0e84abca0c3806e41dc5413f116383d02b0ae431c5bcad417cf', // Секретный ключ для подписи сессии
-  resave: false, // Не сохранять сессию при каждом запросе, если она не изменилась
-  saveUninitialized: true, // Сохранять сессию, если она была инициализирована, но не изменена
-  cookie: { secure: false } // Установите secure в true, если используете HTTPS
-}));
 
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

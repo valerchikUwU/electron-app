@@ -32,13 +32,16 @@ async function startBot() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ phone: phoneNumber , id: telegramId}),
+        }).then(response => {
+            if (response.status === 404) {
+                // Обработка успешного ответа
+                ctx.reply('Такого номера нет');
+            } else {
+                // Обработка ошибки
+                ctx.reply('Вход успешен!');;
+            }
         });
-        const data = await response.json();
-        if (data.success) {
-            ctx.reply('Вход успешен!');
-        } else {
-            ctx.reply('Такого номера нет');
-        }
+        
     });
 
     bot.launch();
