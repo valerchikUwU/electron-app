@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 
 
-
+const apiRoot = process.env.API_ROOT;
 // Маршрут для обработки запросов от бота
 router.post('/auth', async (req, res) => {
             const phoneNumber = req.body.phone;
@@ -14,7 +14,7 @@ router.post('/auth', async (req, res) => {
             const foundNumber = await getTelephoneNumber(phoneNumber);
             if (foundNumber) {                
                 Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
-                res.redirect('http://localhost:3001/api/auth-status');
+                res.redirect(`${apiRoot}/auth-status`);
             } 
             else {
             res.send({ success: false });
