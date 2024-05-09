@@ -3,27 +3,58 @@ const { startBot } = require('../../utils/tgBotLogic');
 const  Account  = require('../../models/account');
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const sequelize = require('../../database/connection');
+
+const apiRoot = process.env.API_ROOT;
 
 
-
-// Маршрут для обработки запросов от бота
 router.post('/auth', async (req, res) => {
-            const phoneNumber = req.body.phone;
-            const id = req.body.id;
-            // Здесь вы проверяете номер телефона в базе данных
-            const foundNumber = await getTelephoneNumber(phoneNumber);
-            if (foundNumber) {                
-                Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
-                const accountId = await Account.findOne({where:{telephoneNumber: foundNumber} })
-                res.send({ success: true });
-            } 
-            else {
-            res.send({ success: false });
-            }
-       });
+    const phoneNumber = req.body.phone;
+    const id = req.body.id;
+    const token = req.body.token
+    const sessionId = req.body.sessionId
+    const foundNumber = await getTelephoneNumber(phoneNumber);
+    
+    const generatedToken = await getGeneratedToken(sessionId);
+    console.log(generatedToken);
+    if(generatedToken === token){
+        if (foundNumber) {                
+            Account.update({telegramId: id}, {where: {telephoneNumber: foundNumber}});
+            const account = await Account.findOne({where: { telephoneNumber: foundNumber}})
+            const accountId = account.id
+            // Передаем accountId через URL
+            res.redirect(`${apiRoot}/${accountId}/productsByType/1`);
+        } else {
+            res.status(404).json({message: 'Номер телефона не найден'});
+        }
+    }
+    else {
+        console.log('Ошибка аутентификации!')
+        res.status(401).json({message: 'Ошибка аутентификации!'})
+    }
+    
+});
+
+
+router.get('/homepage', async (req, res) => {
+    const token = crypto.randomBytes(10).toString('hex')
+    req.session.generatedToken = token;
+    console.log(req.session.generatedToken)
+    console.log(req.sessionID)
+    res.json({
+        token: token,
+        sessionId: req.sessionID,
+    });
+})
+
+
+
+
 
 // Запуск бота
 startBot();
+
 
 
 async function getTelephoneNumber(telephoneNumber) {
@@ -43,6 +74,32 @@ async function getTelephoneNumber(telephoneNumber) {
         return null;
     }
 }
+
+
+async function getGeneratedToken(sessionId) {
+    const sqlQuery = `
+      SELECT JSON_EXTRACT(data, '$.generatedToken') AS generatedToken
+      FROM sessions
+      WHERE session_id = :sessionId
+    `;
+  
+    try {
+      const results = await sequelize.query(sqlQuery, {
+        replacements: { sessionId: sessionId },
+        type: sequelize.QueryTypes.SELECT
+      });
+  
+      if (results.length > 0) {
+        // Возвращаем значение generatedToken
+        return results[0].generatedToken;
+      } else {
+        throw new Error('Session not found');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      throw error; // Перебрасываем ошибку, чтобы она могла быть обработана вызывающей функцией
+    }
+  }
 
 
 module.exports = router;

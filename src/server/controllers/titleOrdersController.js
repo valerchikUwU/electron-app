@@ -44,7 +44,7 @@ exports.user_titleOrder_update_put = [
         for (const title of titlesToUpdate) {
             // Проверяем, что если addBooklet равен 1, то accessType не может быть ни 'Бумажный', ни 'Электронный'
             if (title.addBooklet === false && title.accessType === undefined) {
-                throw new Error('Выберите тип доступа!');
+                res.status(400).json({ error: 'Выберите тип доступа!' });
             }
         }
         // Возвращаем true, если условие выполнено
