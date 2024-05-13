@@ -51,7 +51,7 @@ async function startBot() {
                 const command = match[1].replace('/start', '');
                 console.log(`start: ${command}`)
                 // Разделяем строку на части по дефису
-                const parts = command.split(/-(.*)/);;
+                const parts = command.split(/-(.*)/);
                 const token = parts[0]; // Первая часть - токен
                 const sessionId = parts[1]; // Вторая часть - sessionId
                 console.log(`start: ${token}`)
@@ -100,15 +100,12 @@ async function startBot() {
                 body: JSON.stringify({sessionId: sessionId, token: token, phone: phoneNumber, id: telegramId }),
             }).then(response => {
                 if (response.status === 404) {
-                    // Обработка успешного ответа
                     ctx.reply('Такого номера нет');
                 }
                 else if(response.status === 500 || response.status === 401) {
-                    // Обработка успешного ответа
                     ctx.reply('Что-то пошло не так!');
                 }
                  else {
-                    // Обработка ошибки
                     ctx.reply('Вход успешен!');;
                 }
             });

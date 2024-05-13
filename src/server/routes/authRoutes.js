@@ -1,13 +1,12 @@
 require('dotenv').config();
 const { startBot } = require('../../utils/tgBotLogic'); 
-const  Account  = require('../../models/account');
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 const sequelize = require('../../database/connection');
 const WebSocket = require('ws');
 const url = require('url');
-
+const Account = require('../../models/account');
+const crypto = require('crypto');
 
 
 const apiRoot = process.env.API_ROOT;
@@ -37,15 +36,15 @@ router.post('/auth', async (req, res) => {
         const generatedToken = await getGeneratedToken(sessionId);
         console.log(`/auth: ${token}`);
         console.log(`/auth: ${generatedToken}`);
-
         if (generatedToken === token) {
             if (foundNumber) {
                 Account.update({ telegramId: id }, { where: { telephoneNumber: foundNumber } });
                 const account = await Account.findOne({ where: { telephoneNumber: foundNumber } });
                 const accountId = account.id;
                 // Передаем accountId через URL
-                sendMessageToClient(sessionId, accountId)
-                res.redirect(`${apiRoot}/${accountId}/productsByType/1`);
+                sendMessageToClient(sessionId, accountId);
+                await setSessionAccountId(sessionId, accountId);
+                res.status(200).json({message: 'Вы успешно аутентифицированы'});
             } else {
                 res.status(404).json({ message: 'Номер телефона не найден' });
             }
@@ -56,8 +55,8 @@ router.post('/auth', async (req, res) => {
         }
     } catch (error) {
         // Обработка ошибок, возникающих при обращении к базе данных
-        console.error('Error occurred while fetching data from the database:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Ошибка при запросе к БД:', error);
+        res.status(500).json({ message: 'Что - то пошло не так!' });
     }
 });
 
@@ -102,6 +101,30 @@ async function getTelephoneNumber(telephoneNumber) {
 }
 
 
+
+
+async function setSessionAccountId(sessionID, accountId){
+    try {
+        const updatedRows = await sequelize.query(
+          `UPDATE sessions SET data = JSON_SET(data, '$.accountId', :accountId) WHERE session_id = :sessionId`,
+          {
+            replacements: { sessionId: sessionID, accountId: accountId },
+            type: sequelize.QueryTypes.UPDATE
+          }
+        );
+        console.log(`setSessionAccountId ${updatedRows[1]}`)
+        if (updatedRows[1] > 0) {
+          console.log(`Updated ${updatedRows} rows.`);
+          return true;
+        } else {
+          throw new Error('No rows updated');
+        }
+      } catch (error) {
+        console.error('Error updating generatedToken:', error);
+        throw error; // Перебрасываем ошибку, чтобы она могла быть обработана вызывающей функцией
+      }
+}
+
 async function getGeneratedToken(sessionID) {
     const sqlQuery = `
       SELECT JSON_EXTRACT(data, '$.generatedToken') AS generatedToken
@@ -110,7 +133,7 @@ async function getGeneratedToken(sessionID) {
     `;
   
     try {
-      const results = await sequelize.query(sqlQuery, {
+      const results = await sequelize.query(sqlQuery, { 
         replacements: { sessionId: sessionID },
         type: sequelize.QueryTypes.SELECT
       });
@@ -148,3 +171,4 @@ function onAuthSuccess(sessionId) {
 
 
 module.exports = router;
+exports.getGeneratedToken = getGeneratedToken;

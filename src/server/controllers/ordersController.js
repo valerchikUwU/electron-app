@@ -65,7 +65,8 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
         res.json({
             title: "Все активные заказы",
             orders_list: activeOrders,
-            organizationList: organizationList
+            organizationList: organizationList,
+            sessionID: req.sessionID
         })
     }
     catch (error) {
@@ -120,7 +121,8 @@ exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
         });
         res.json({
             title: "Все полученные заказы",
-            orders_list: finishedOrders
+            orders_list: finishedOrders,
+            sessionID: req.sessionID
         })
     }
 
