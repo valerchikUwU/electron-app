@@ -754,8 +754,12 @@ exports.user_draftOrder_updateStatus_put = [
             return;
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
+            const titles = await TitleOrders.findAll({where: {orderId: oldOrder.id}})
             if (oldOrder.status !== 'Черновик') {
                 res.status(400).send('Редактировать можно только черновик')
+            }
+            if(!titles){
+                res.status(400).send('Добавьте товары в заказ!')
             }
             oldOrder.organizationCustomerId = order.organizationCustomerId;
             oldOrder.status = 'Активный'
