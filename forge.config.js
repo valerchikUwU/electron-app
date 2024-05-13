@@ -4,6 +4,10 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    asarUnpack: [
+      // Путь к папке, которую вы хотите распаковать из asar
+      'src/build/**/*'
+    ],
   },
   rebuildConfig: {},
   makers: [
@@ -40,5 +44,6 @@ module.exports = {
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
+    
   ],
 };

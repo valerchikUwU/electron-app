@@ -289,7 +289,7 @@ router.get("/:accountId/accounts", checkAbilities('read', 'Account'), accounts_c
 /**
  * Запрос GET для всех пользователей от лица админа
  */
-router.get("/:accountId/superAdm/accounts", checkAbilities('read', 'SuperAdmin'), accounts_controller.superAdmin_accounts_list);
+router.get("/:accountId/superAdmin/accounts", checkAbilities('read', 'SuperAdmin'), accounts_controller.superAdmin_accounts_list);
 
 
 /**

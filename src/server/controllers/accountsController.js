@@ -80,21 +80,21 @@ exports.account_organization_create_post = [
     body("firstName", "Имя должно быть указано!")
         .trim()
         .isLength({ min: 1 })
-        .escape()
-        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
-        .withMessage('Имя может содержать только русские буквы и пробелы'),
+        .escape(),
+        // .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        // .withMessage('Имя может содержать только русские буквы и пробелы'),
     body("lastName", "Фамилия должна быть указана!")
         .trim()
         .isLength({ min: 1 })
-        .escape()
-        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
-        .withMessage('Фамилия может содержать только русские буквы и пробелы'),
+        .escape(),
+        // .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
+        // .withMessage('Фамилия может содержать только русские буквы и пробелы'),
     body("telephoneNumber", "Номер телефона должен быть указан!")
         .trim()
         .isLength({ min: 10 })
-        .escape()
-        .matches(/^\+7\d{10}$/, 'ru-RU')
-        .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
+        .escape(),
+        // .matches(/^\+7\d{10}$/, 'ru-RU')
+        // .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
     body("organizationList.*").escape(),
 
 
@@ -181,26 +181,27 @@ exports.superAdmin_account_organization_create_post = [
     body("firstName", "Имя должно быть указано!")
         .trim()
         .isLength({ min: 1 })
-        .escape()
-        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
-        .withMessage('Имя может содержать только русские буквы и пробелы'),
+        .escape(),
+        // .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU') // Исправлено: 'ru-RU' не используется как флаг
+        // .withMessage('Имя может содержать только русские буквы и пробелы'),
     body("lastName", "Фамилия должна быть указана!")
         .trim()
         .isLength({ min: 1 })
-        .escape()
-        .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU')
-        .withMessage('Фамилия может содержать только русские буквы и пробелы'),
+        .escape(),
+        // .matches(/^[а-яА-ЯёЁ\s]+$/, 'ru-RU') // Исправлено: 'ru-RU' не используется как флаг
+        // .withMessage('Фамилия может содержать только русские буквы и пробелы'),
     body("telephoneNumber", "Номер телефона должен быть указан!")
         .trim()
         .isLength({ min: 10 })
-        .escape()
-        .matches(/^\+7\d{10}$/, 'ru-RU')
-        .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
+        .escape(),
+        // .matches(/^\+7\d{10}$/, 'ru-RU') // Исправлено: 'ru-RU' не используется как флаг
+        // .withMessage('Номер телефона должен начинаться с +7 и содержать 10 цифр'),
     body("roleId", "Роль должна быть выбрана!")
         .isIn([2, 3])
         .isLength({ min: 1 })
         .escape(),
     body("organizationList.*").escape(),
+
 
 
 
@@ -227,7 +228,6 @@ exports.superAdmin_account_organization_create_post = [
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             telephoneNumber: req.body.telephoneNumber,
-            telegramId: req.body.telegramId,
             organizationList: req.body.organizationList,
             roleId: req.body.roleId
         });

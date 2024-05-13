@@ -9,15 +9,31 @@ const allRoutes = require('./routes/allRoutes');
 const app = express();
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+
+
 const API_ROOT = process.env.API_ROOT;
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
+
+
 const optionsStore = {
 	host: process.env.host,
 	port: process.env.port,
 	user: process.env.db_user,
 	password: process.env.password,
-	database: process.env.db_name
+	database: process.env.db_name,
+  // Whether or not to automatically check for and clear expired sessions:
+	clearExpired: true,
+	// How frequently expired sessions will be cleared; milliseconds:
+	checkExpirationInterval: 900000,
+	// The maximum age of a valid session; milliseconds:
+	expiration: 3600000,
+	// Whether or not to create the sessions database table, if one does not already exist:
+	createDatabaseTable: true,
+	// Whether or not to end the database connection when the store is closed.
+	// The default value of this option depends on whether or not a connection was passed to the constructor.
+	// If a connection object is passed to the constructor, the default value for this option is false.
+	endConnectionOnClose: true,
 };
 
 const sessionStore = new MySQLStore(optionsStore);
@@ -74,7 +90,7 @@ app.use(express.json());
 
 // Настройка сессии
 app.use(session({
-  secret: 'f1f53b4ed3e8176cc39f44f6792cac982b0755d581b732aa659b2a52396f7b0b4d420abd01bcf0e84abca0c3806e41dc5413f116383d02b0ae431c5bcad417cf', // Секретный ключ для подписи сессии
+  secret: process.env.SESSION_SECRET, // Секретный ключ для подписи сессии
   store: sessionStore,
   resave: false, // Не сохранять сессию при каждом запросе, если она не изменилась
   saveUninitialized: false, // Сохранять сессию, если она была инициализирована, но не изменена

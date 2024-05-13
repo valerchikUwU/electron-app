@@ -49,11 +49,13 @@ async function startBot() {
             if (match) {
                 // Удаляем /start из начала строки
                 const command = match[1].replace('/start', '');
+                console.log(`start: ${command}`)
                 // Разделяем строку на части по дефису
-                const parts = command.split('-');
+                const parts = command.split(/-(.*)/);;
                 const token = parts[0]; // Первая часть - токен
                 const sessionId = parts[1]; // Вторая часть - sessionId
-            
+                console.log(`start: ${token}`)
+                console.log(`start: ${sessionId}`)
                 // Здесь вы можете использовать token и sessionId для дальнейших действий
                 if (token) {
                     ctx.session.token = token; // Сохраняем токен в сессию
@@ -86,7 +88,9 @@ async function startBot() {
         const telegramId = ctx.message.contact.user_id;
         const token = ctx.session.token;
         const sessionId = ctx.session.sessionId
-        console.log(sessionId)
+        
+        console.log(`contact: ${token}`)
+        console.log(`contact: ${sessionId}`)
         if (token) {
             const response = await fetch(`${apiRoot}/auth`, {
                 method: 'POST',
@@ -98,7 +102,12 @@ async function startBot() {
                 if (response.status === 404) {
                     // Обработка успешного ответа
                     ctx.reply('Такого номера нет');
-                } else {
+                }
+                else if(response.status === 500 || response.status === 401) {
+                    // Обработка успешного ответа
+                    ctx.reply('Что-то пошло не так!');
+                }
+                 else {
                     // Обработка ошибки
                     ctx.reply('Вход успешен!');;
                 }

@@ -23,7 +23,9 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
     "@electron-forge/plugin-fuses": "^7.3.1",
     "@electron/fuses": "^1.8.0",
+    "@timfish/forge-externals-plugin": "^0.2.1",
     "electron": "29.3.0",
+    "electron-builder": "^24.13.3",
     "sequelize-cli": "^6.6.2"
   },
   "keywords": [],
@@ -55,6 +57,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "telegraf": "^4.16.3",
-    "telegraf-session-local": "^2.1.1"
+    "telegraf-session-local": "^2.1.1",
+    "ws": "^8.17.0"
   }
 }
