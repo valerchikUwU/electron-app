@@ -97,4 +97,4 @@ out/
 build
 
 # main electron file
-index.js
+src/index.js
