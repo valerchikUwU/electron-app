@@ -778,8 +778,8 @@ exports.user_draftOrder_updateStatus_put = [
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
             const titles = await TitleOrders.findAll({where: {orderId: oldOrder.id}})
-            if (oldOrder.status !== 'Черновик') {
-                res.status(400).send('Редактировать можно только черновик')
+            if (oldOrder.status !== 'Черновик' || oldOrder.status !== 'Черновик депозита' ) {
+                res.status(400).send('Редактировать можно только черновик!')
             }
             if(!titles){
                 res.status(400).send('Добавьте товары в заказ!')
