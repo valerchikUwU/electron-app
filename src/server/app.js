@@ -30,6 +30,14 @@ const allRoutes = require('./routes/allRoutes');
 const app = express();
 
 
+const fs = require('fs');
+const https = require('https');
+
+
+
+
+
+
 // Корень URL
 const API_ROOT = process.env.API_ROOT;
 
@@ -133,8 +141,12 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', authRoutes);
 app.use('/api', allRoutes );
 
+// const privateKey = fs.readFileSync('C:/Users/koval/electron-store-app/electron-app/private_key_no_password.pem', 'utf8');
+// const certificate = fs.readFileSync('C:/Users/koval/electron-store-app/electron-app/cert.pem', 'utf8');
 
- 
+ // Создание HTTPS сервера
+// const credentials = { key: privateKey, cert: certificate };
+// const httpsServer = https.createServer(credentials, app);
 
 // Запуск Express сервера
 const PORT = process.env.SERVER_PORT;

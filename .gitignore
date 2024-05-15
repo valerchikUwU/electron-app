@@ -98,3 +98,6 @@ build
 
 # main electron file
 src/index.js
+
+
+*.pem
