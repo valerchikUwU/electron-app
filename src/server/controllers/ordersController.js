@@ -315,10 +315,12 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
     try {
         const [order, titles, products] = await Promise.all([
             Order.findByPk(req.params.orderId, {
-                include: [
+                include: 
+                [
                     {
                         model: TitleOrders,
-                        include: [
+                        include: 
+                        [
                             {
                                 model: PriceDefinition,
                                 as: 'price',
@@ -328,8 +330,10 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                         attributes: ['quantity']
                     }
                 ],
-                attributes: {
-                    include: [
+                attributes: 
+                {
+                    include: 
+                    [
                         [
                             Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
                         ],
@@ -337,10 +341,12 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                 },
             }),
             TitleOrders.findAll({
-                where: {
+                where: 
+                {
                     orderId: req.params.orderId
                 },
-                include: [
+                include: 
+                [
                     {
                         model: Product,
                         as: 'product',
@@ -352,8 +358,10 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                         attributes: ['priceAccess', 'priceBooklet']
                     }
                 ],
-                attributes: {
-                    include: [
+                attributes: 
+                {
+                    include: 
+                    [
                         [
                             Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
                         ],
@@ -363,7 +371,23 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                     ]
                 },
             }),
-            Product.findAll({ where: { productTypeId: { [Op.ne]: 4 } } })
+            Product.findAll({ 
+                where: 
+                { 
+                    productTypeId: 
+                    { 
+                        [Op.ne]: 4 
+                    } 
+                },
+                include: 
+                [
+                    {
+                        model: PriceDefinition,
+                        as: 'price',
+                        attributes: ['priceAccess', 'priceBooklet']
+                    }
+                ] 
+            })
         ]);
 
         if (order.id === null) {
