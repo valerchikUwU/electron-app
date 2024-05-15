@@ -383,7 +383,6 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
                 [
                     {
                         model: PriceDefinition,
-                        as: 'price',
                         attributes: ['priceAccess', 'priceBooklet']
                     }
                 ] 
