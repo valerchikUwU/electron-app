@@ -41,6 +41,9 @@ router.post('/auth', async (req, res) => {
                 Account.update({ telegramId: id }, { where: { telephoneNumber: foundNumber } });
                 const account = await Account.findOne({ where: { telephoneNumber: foundNumber } });
                 const accountId = account.id;
+                account.lastSeen = new Date()
+                
+              
                 // Передаем accountId через URL
                 sendMessageToClient(sessionId, accountId);
                 await setSessionAccountId(sessionId, accountId);

@@ -37,7 +37,18 @@ const Account = sequelize.define('Account', {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false
-   }
+   },
+
+   lastSeen: {
+      type: DataTypes.DATE,
+      allowNull: true
+   },
+   accountNumber: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true, // Указываем, что поле будет автоинкрементироваться
+      unique: true, // Указываем, что значение поля должно быть уникальным
+      allowNull: false // Указываем, что поле не может быть null
+  }
 },
    {
       // Можно добавить дополнительные настройки модели здесь
