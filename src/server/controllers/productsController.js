@@ -22,10 +22,12 @@ exports.products_list = asyncHandler(async (req, res, next) => {
         where: { productTypeId: productTypeId },
         raw: true
       });
+      req.session.accountId = req.params.accountId
 
       res.json({
         title: "Начальные",
-        productsList: productsInit
+        productsList: productsInit,
+        sessionID: req.sessionID
       });
       break;
     case 2:
@@ -36,7 +38,8 @@ exports.products_list = asyncHandler(async (req, res, next) => {
 
       res.json({
         title: "Основные",
-        productsList: productsMain
+        productsList: productsMain,
+        sessionID: req.sessionID
       });
       break;
     case 3:
@@ -47,7 +50,8 @@ exports.products_list = asyncHandler(async (req, res, next) => {
 
       res.json({
         title: "Для персонала",
-        productsList: productsForEmployers
+        productsList: productsForEmployers,
+        sessionID: req.sessionID
       });
       break;
     case 4:

@@ -23,7 +23,7 @@ if (account.isBlocked) {
       can('read',   ['Order_User', 'Product', 'TitleOrder_User']); // Пользователь может читать свои заказы
       can('create', ['Order_User', 'TitleOrder_User']); // Пользователь может создавать заказы
       can('update', ['Order_User', 'TitleOrder_User'], { accountId: account.id }); // Пользователь может обновлять свои заказы
-      can('delete', ['TitleOrder'], { accountId: account.id }); // Пользователь может удалять свои наименования
+      can('delete', ['TitleOrder_User'], { accountId: account.id }); // Пользователь может удалять свои наименования
       break;
     default:
       // Политика по умолчанию, если роль не определена

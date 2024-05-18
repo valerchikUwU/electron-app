@@ -1,21 +1,53 @@
-
+//Переменные среды
 require('dotenv').config();
+
+
+// Импортируем Express, фреймворк для создания веб-приложений на Node.js
 const express = require('express');
+
+// Импортируем модуль для сжатия ответов сервера, что улучшает производительность
 const compression = require("compression");
+
+// Импортируем модуль для управления CORS (Cross-Origin Resource Sharing), позволяющий безопасно делать запросы между доменами
 const cors = require('cors');
-const helmet = require("helmet");
-const authRoutes = require('./routes/authRoutes');
-const allRoutes = require('./routes/allRoutes');
-const app = express();
+
+// Импортируем Swagger JSDoc для документирования API с использованием JSDoc комментариев
 const swaggerJSDoc = require('swagger-jsdoc');
+
+// Импортируем Swagger UI Express для отображения документации API в веб-интерфейсе
 const swaggerUi = require('swagger-ui-express');
 
+// Импортируем модуль Helmet для защиты приложения от некоторых видов атак
+const helmet = require("helmet");
 
+// Импортируем маршруты аутентификации
+const authRoutes = require('./routes/authRoutes');
+
+// Импортируем все маршруты приложения
+const allRoutes = require('./routes/allRoutes');
+
+// Создаем экземпляр приложения Express
+const app = express();
+
+
+const fs = require('fs');
+const https = require('https');
+
+
+
+
+
+
+// Корень URL
 const API_ROOT = process.env.API_ROOT;
+
+// Импортируем модуль для сессий
 const session = require('express-session');
+
+// Импортируем модуль для создания хранилища сессий
 const MySQLStore = require('express-mysql-session')(session);
 
-
+// Опции хранилища
 const optionsStore = {
 	host: process.env.host,
 	port: process.env.port,
@@ -25,9 +57,9 @@ const optionsStore = {
   // Whether or not to automatically check for and clear expired sessions:
 	clearExpired: true,
 	// How frequently expired sessions will be cleared; milliseconds:
-	checkExpirationInterval: 900000,
+	checkExpirationInterval: 360000000,
 	// The maximum age of a valid session; milliseconds:
-	expiration: 3600000,
+	expiration: 86400000,
 	// Whether or not to create the sessions database table, if one does not already exist:
 	createDatabaseTable: true,
 	// Whether or not to end the database connection when the store is closed.
@@ -36,7 +68,14 @@ const optionsStore = {
 	endConnectionOnClose: true,
 };
 
+// Создание хранилища
 const sessionStore = new MySQLStore(optionsStore);
+
+
+
+
+
+
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
@@ -102,17 +141,12 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', authRoutes);
 app.use('/api', allRoutes );
 
+// const privateKey = fs.readFileSync('C:/Users/koval/electron-store-app/electron-app/private_key_no_password.pem', 'utf8');
+// const certificate = fs.readFileSync('C:/Users/koval/electron-store-app/electron-app/cert.pem', 'utf8');
 
-  
-  // // error handler
-  // app.use(function (err, req, res, next) {
-  //   console.error(err.stack); // Запись стека ошибки в консоль
-  //   res.locals.message = err.message;
-  //   res.locals.error = req.app.get("env") === "development" ? err : {};
-  
-  //   res.status(500).send(res.locals.message || 'Internal Server Error');
-  // });
-
+ // Создание HTTPS сервера
+// const credentials = { key: privateKey, cert: certificate };
+// const httpsServer = https.createServer(credentials, app);
 
 // Запуск Express сервера
 const PORT = process.env.SERVER_PORT;
