@@ -8,6 +8,9 @@ const Role = require('../../models/role');
 
 exports.accounts_list = asyncHandler(async (req, res, next) => {
     const accounts = await Account.findAll({ where: { roleId: 3 }, raw: true })
+    accounts.forEach(account => {
+        account.formattedLastSeen = account.lastSeen ? dateFns.format(account.lastSeen, 'HH:mm dd-MM') : null;
+    });
     res.json({
         title: "Список аккаунтов",
         accounts: accounts
@@ -23,6 +26,9 @@ exports.superAdmin_accounts_list = asyncHandler(async (req, res, next) => {
             }
         },
         raw: true
+    });
+    accounts.forEach(account => {
+        account.formattedLastSeen = account.lastSeen ? dateFns.format(account.lastSeen, 'HH:mm dd-MM') : null;
     });
     res.json({
         title: "Список аккаунтов",
