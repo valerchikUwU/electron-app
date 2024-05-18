@@ -9,6 +9,7 @@ const Payee = require('../../models/payee');
 const PriceDefinition = require('../../models/priceDefinition');
 const Product = require('../../models/product');
 const dateFns = require('date-fns');
+const createHttpError = require('http-errors');
 
 exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
@@ -553,7 +554,8 @@ exports.user_order_create_post = [
                 raw: true
             })
             if (draftOrder !== null) {
-                return res.status(400).send('Измените черновик депозита!')
+                
+                throw createHttpError(400, 'Измените черновик депозита!')
             }
 
             const organizationCustomerId = await OrganizationCustomer.findOne({
