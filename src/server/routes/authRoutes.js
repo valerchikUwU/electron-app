@@ -38,14 +38,14 @@ router.post('/auth', async (req, res) => {
         console.log(`/auth: ${generatedToken}`);
         if (generatedToken === token) {
             if (foundNumber) {
-                Account.update({ telegramId: id }, { where: { telephoneNumber: foundNumber } });
+                await Account.update({ telegramId: id }, { where: { telephoneNumber: foundNumber } });
                 const account = await Account.findOne({ where: { telephoneNumber: foundNumber } });
                 const accountId = account.id;
                 account.lastSeen = new Date()
                 
               
                 // Передаем accountId через URL
-                sendMessageToClient(sessionId, accountId);
+                await sendMessageToClient(sessionId, accountId);
                 await setSessionAccountId(sessionId, accountId);
                 res.status(200).json({message: 'Вы успешно аутентифицированы'});
             } else {
@@ -154,7 +154,7 @@ async function getGeneratedToken(sessionID) {
   }
 
 
-  function sendMessageToClient(sessionId, message) {
+  async function sendMessageToClient(sessionId, message) {
     const ws = connections[sessionId];
     if (ws) {
         console.log(`ot servera klienty: ${message}`)
