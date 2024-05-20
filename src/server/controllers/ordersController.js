@@ -413,7 +413,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
 
 exports.admin_order_detail = asyncHandler(async (req, res, next) => {
     try {
-        const [order, titles] = await Promise.all([
+        const [order, titles, products, payees, organizationList] = await Promise.all([
             Order.findByPk(req.params.orderId, {
                 include: [
                     {
@@ -478,7 +478,25 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                         ]
                     ]
                 }
-            })
+            }),
+            Product.findAll({ 
+                where: 
+                { 
+                    productTypeId: 
+                    { 
+                        [Op.ne]: 4 
+                    } 
+                },
+                include: 
+                [
+                    {
+                        model: PriceDefinition,
+                        attributes: ['priceAccess', 'priceBooklet']
+                    }
+                ] 
+            }),
+            Payee.findAll(),
+            getOrganizationList(order.accountId)
         ]);
 
         if (order.id === null) {
@@ -492,6 +510,9 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             title: "Детали заказа",
             order: order,
             titles: titles,
+            products: products,
+            payees: payees,
+            organizationList: organizationList
         });
     }
     catch (error) {
