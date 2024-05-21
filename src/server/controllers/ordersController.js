@@ -413,7 +413,7 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
 
 exports.admin_order_detail = asyncHandler(async (req, res, next) => {
     try {
-        const [order, titles, products, payees, organizationList] = await Promise.all([
+        const [order, titles, products, payees] = await Promise.all([
             Order.findByPk(req.params.orderId, {
                 include: [
                     {
@@ -436,6 +436,11 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                         model: Payee,
                         as: "payee",
                         attributes: ['name']
+                    },
+                    {
+                        model: Account, 
+                        as: 'account', 
+                        attributes: ['organizationList'] 
                     }
                 ],
                 attributes: {
@@ -448,6 +453,9 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                         ],
                         [
                             Sequelize.literal(`organizationName`), 'organizationName'
+                        ],
+                        [
+                            Sequelize.literal(`organizationList`), 'organizationList'
                         ]
                     ]
                 }
@@ -495,8 +503,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
                     }
                 ] 
             }),
-            Payee.findAll(),
-            getOrganizationList(order.accountId)
+            Payee.findAll()
         ]);
 
         if (order.id === null) {
@@ -511,8 +518,7 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
             order: order,
             titles: titles,
             products: products,
-            payees: payees,
-            organizationList: organizationList
+            payees: payees
         });
     }
     catch (error) {
