@@ -38,10 +38,9 @@ router.post('/auth', async (req, res) => {
         console.log(`/auth: ${generatedToken}`);
         if (generatedToken === token) {
             if (foundNumber) {
-                await Account.update({ telegramId: id }, { where: { telephoneNumber: foundNumber } });
+                await Account.update({ telegramId: id, lastSeen: new Date() }, { where: { telephoneNumber: foundNumber } });
                 const account = await Account.findOne({ where: { telephoneNumber: foundNumber } });
                 const accountId = account.id;
-                account.lastSeen = new Date()
                 
               
                 // Передаем accountId через URL
