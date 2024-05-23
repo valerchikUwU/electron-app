@@ -60,9 +60,8 @@ exports.account_organization_create_get = asyncHandler(async (req, res, next) =>
     // Используем Promise.all для параллельного выполнения запросов к базе данных.
     // В данном случае, выполняем запрос к таблице ProductType,
     // чтобы получить все типы продуктов, отсортированные по id и name.
-    const [allOrganizations] = await Promise.all([
-        OrganizationCustomer.findAll({ order: [['name']] })
-    ]);
+    const allOrganizations = await OrganizationCustomer.findAll({ order: ['organizationName'] })
+
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
