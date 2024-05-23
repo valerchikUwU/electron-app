@@ -75,8 +75,13 @@ router.get('/homepage', async (req, res) => {
     });
 })
 
-
-
+// app.get("/logout", (req, res) => {
+//   // Destroy the session and redirect to the login page
+//   req.session.destroy(() => {
+//       res.clearCookie("sessionId");
+//       res.redirect("/login");
+//   });
+// });
 
 
 // Запуск бота
