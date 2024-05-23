@@ -175,8 +175,8 @@ exports.admin_titleOrder_update_put = [
     body().custom((value, { req }) => {
         const titlesToUpdate = req.body.titlesToUpdate;
         for (const title of titlesToUpdate) {
-            if (title.addBooklet === 1 && title.accessType !== null) {
-                throw new Error('Буклет представлен только в виде бумажного формата!');
+            if (title.addBooklet === false && title.accessType === undefined) {
+                res.status(400).json({ error: 'Выберите тип доступа!' });
             }
         }
         // Возвращаем true, если условие выполнено
