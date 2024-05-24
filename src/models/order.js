@@ -32,6 +32,12 @@ const Order = sequelize.define('Order', {
         autoIncrement: true, // Указываем, что поле будет автоинкрементироваться
         unique: true, // Указываем, что значение поля должно быть уникальным
         allowNull: false // Указываем, что поле не может быть null
+    },
+
+    isFromDeposit: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
     }
 });
 

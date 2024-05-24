@@ -314,77 +314,77 @@ exports.user_order_detail = asyncHandler(async (req, res, next) => {
     try {
         const [order, titles, products] = await Promise.all([
             Order.findByPk(req.params.orderId, {
-                include: 
-                [
-                    {
-                        model: TitleOrders,
-                        include: 
-                        [
-                            {
-                                model: PriceDefinition,
-                                as: 'price',
-                                attributes: ['priceAccess', 'priceBooklet']
-                            }
-                        ],
-                        attributes: ['quantity']
-                    }
-                ],
-                attributes: 
-                {
-                    include: 
+                include:
                     [
+                        {
+                            model: TitleOrders,
+                            include:
+                                [
+                                    {
+                                        model: PriceDefinition,
+                                        as: 'price',
+                                        attributes: ['priceAccess', 'priceBooklet']
+                                    }
+                                ],
+                            attributes: ['quantity']
+                        }
+                    ],
+                attributes:
+                {
+                    include:
                         [
-                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
-                        ],
-                    ]
+                            [
+                                Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                            ],
+                        ]
                 },
             }),
             TitleOrders.findAll({
-                where: 
+                where:
                 {
                     orderId: req.params.orderId
                 },
-                include: 
-                [
-                    {
-                        model: Product,
-                        as: 'product',
-                        attributes: ['abbreviation']
-                    },
-                    {
-                        model: PriceDefinition,
-                        as: 'price',
-                        attributes: ['priceAccess', 'priceBooklet']
-                    }
-                ],
-                attributes: 
-                {
-                    include: 
+                include:
                     [
+                        {
+                            model: Product,
+                            as: 'product',
+                            attributes: ['abbreviation']
+                        },
+                        {
+                            model: PriceDefinition,
+                            as: 'price',
+                            attributes: ['priceAccess', 'priceBooklet']
+                        }
+                    ],
+                attributes:
+                {
+                    include:
                         [
-                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
-                        ],
-                        [
-                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
-                        ],
-                    ]
+                            [
+                                Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
+                            ],
+                            [
+                                Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
+                            ],
+                        ]
                 },
             }),
-            Product.findAll({ 
-                where: 
-                { 
-                    productTypeId: 
-                    { 
-                        [Op.ne]: 4 
-                    } 
-                },
-                include: 
-                [
+            Product.findAll({
+                where:
+                {
+                    productTypeId:
                     {
-                        model: PriceDefinition,
-                        attributes: ['priceAccess', 'priceBooklet']
+                        [Op.ne]: 4
                     }
-                ] 
+                },
+                include:
+                    [
+                        {
+                            model: PriceDefinition,
+                            attributes: ['priceAccess', 'priceBooklet']
+                        }
+                    ]
             })
         ]);
 
@@ -413,100 +413,100 @@ exports.admin_order_detail = asyncHandler(async (req, res, next) => {
     try {
         const [order, titles, products, payees] = await Promise.all([
             Order.findByPk(req.params.orderId, {
-                include: 
-                [
-                    {
-                        model: TitleOrders,
-                        include: [
-                            {
-                                model: PriceDefinition,
-                                as: 'price',
-                                attributes: ['priceAccess', 'priceBooklet']
-                            }
-                        ],
-                        attributes: ['quantity']
-                    },
-                    {
-                        model: OrganizationCustomer,
-                        as: 'organization',
-                        attributes: ['organizationName']
-                    },
-                    {
-                        model: Payee,
-                        as: "payee",
-                        attributes: ['name']
-                    },
-                    {
-                        model: Account, 
-                        as: 'account', 
-                        attributes: ['organizationList'] 
-                    }
-                ],
-                attributes: 
-                {
-                    include: 
+                include:
                     [
+                        {
+                            model: TitleOrders,
+                            include: [
+                                {
+                                    model: PriceDefinition,
+                                    as: 'price',
+                                    attributes: ['priceAccess', 'priceBooklet']
+                                }
+                            ],
+                            attributes: ['quantity']
+                        },
+                        {
+                            model: OrganizationCustomer,
+                            as: 'organization',
+                            attributes: ['organizationName']
+                        },
+                        {
+                            model: Payee,
+                            as: "payee",
+                            attributes: ['name']
+                        },
+                        {
+                            model: Account,
+                            as: 'account',
+                            attributes: ['organizationList']
+                        }
+                    ],
+                attributes:
+                {
+                    include:
                         [
-                            Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
-                        ],
-                        [
-                            Sequelize.literal(`name`), 'payeeName'
-                        ],
-                        [
-                            Sequelize.literal(`organizationName`), 'organizationName'
-                        ],
-                        [
-                            Sequelize.literal(`organizationList`), 'organizationList'
+                            [
+                                Sequelize.literal(`SUM(CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END)`), 'SUM'
+                            ],
+                            [
+                                Sequelize.literal(`name`), 'payeeName'
+                            ],
+                            [
+                                Sequelize.literal(`organizationName`), 'organizationName'
+                            ],
+                            [
+                                Sequelize.literal(`organizationList`), 'organizationList'
+                            ]
                         ]
-                    ]
                 }
             }),
             TitleOrders.findAll({
-                where: 
+                where:
                 {
                     orderId: req.params.orderId
                 },
-                include: 
-                [
-                    {
-                        model: Product,
-                        as: 'product',
-                        attributes: ['abbreviation']
-                    },
-                    {
-                        model: PriceDefinition,
-                        as: 'price',
-                        attributes: ['priceAccess', 'priceBooklet']
-                    }
-                ],
-                attributes: 
-                {
-                    include: 
+                include:
                     [
+                        {
+                            model: Product,
+                            as: 'product',
+                            attributes: ['abbreviation']
+                        },
+                        {
+                            model: PriceDefinition,
+                            as: 'price',
+                            attributes: ['priceAccess', 'priceBooklet']
+                        }
+                    ],
+                attributes:
+                {
+                    include:
                         [
-                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
-                        ],
-                        [
-                            Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
+                            [
+                                Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN quantity * priceBooklet ELSE quantity * priceAccess END`), 'SumForOneTitle'
+                            ],
+                            [
+                                Sequelize.literal(`CASE WHEN addBooklet = TRUE THEN priceBooklet ELSE priceAccess END`), 'PriceForOneProduct'
+                            ]
                         ]
-                    ]
                 }
             }),
-            Product.findAll({ 
-                where: 
-                { 
-                    productTypeId: 
-                    { 
-                        [Op.ne]: 4 
-                    } 
-                },
-                include: 
-                [
+            Product.findAll({
+                where:
+                {
+                    productTypeId:
                     {
-                        model: PriceDefinition,
-                        attributes: ['priceAccess', 'priceBooklet']
+                        [Op.ne]: 4
                     }
-                ] 
+                },
+                include:
+                    [
+                        {
+                            model: PriceDefinition,
+                            attributes: ['priceAccess', 'priceBooklet']
+                        }
+                    ]
             }),
             Payee.findAll()
         ]);
@@ -586,7 +586,7 @@ exports.user_order_create_post = [
                 raw: true
             })
             if (draftOrder !== null) {
-                
+
                 throw createHttpError(400, 'Измените черновик депозита!')
             }
 
@@ -734,6 +734,8 @@ exports.admin_order_create_post = [
         .optional({ checkFalsy: true })
         .trim()
         .escape(),
+    body("isFromDeposit")
+        .escape(),
 
 
     asyncHandler(async (req, res, next) => {
@@ -747,7 +749,8 @@ exports.admin_order_create_post = [
             dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
             status: req.body.status,
             billNumber: req.body.billNumber,
-            payeeId: req.body.payeeId
+            payeeId: req.body.payeeId,
+            isFromDeposit: req.body.isFromDeposit
         });
 
         if (!errors.isEmpty()) {
@@ -811,11 +814,11 @@ exports.user_draftOrder_updateStatus_put = [
             return;
         } else {
             const oldOrder = await Order.findByPk(req.params.orderId);
-            const titles = await TitleOrders.findAll({where: {orderId: oldOrder.id}})
-            if (oldOrder.status !== 'Черновик' || oldOrder.status !== 'Черновик депозита' ) {
+            const titles = await TitleOrders.findAll({ where: { orderId: oldOrder.id } })
+            if (oldOrder.status !== 'Черновик' || oldOrder.status !== 'Черновик депозита') {
                 res.status(400).send('Редактировать можно только черновик!')
             }
-            if(!titles){
+            if (!titles) {
                 res.status(400).send('Добавьте товары в заказ!')
             }
             oldOrder.organizationCustomerId = order.organizationCustomerId;
@@ -856,69 +859,6 @@ exports.user_receivedOrder_updateStatus_put = [
         }
     }),
 ];
-
-
-
-
-
-
-
-
-
-exports.admin_order_update_put = [
-
-
-    // Validate and sanitize fields.
-
-    body("organizationCustomerId", "organizationCustomerId must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("status", "status must not be empty.")
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body("billNumber")
-        .optional({ checkFalsy: true })
-        .escape(),
-
-
-    asyncHandler(async (req, res, next) => {
-        const errors = validationResult(req);
-
-        const order = new Order({
-            organizationCustomerId: req.body.organizationCustomerId,
-            status: req.body.status,
-            billNumber: req.body.billNumber,
-            dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
-            _id: req.params.orderId
-        });
-
-        if (!errors.isEmpty()) {
-            const [allOrganizations] = await Promise.all([
-                getOrganizationList(req.params.accountId)
-            ]);
-
-
-            res.json({
-                title: "Update order",
-                allOrganizations: allOrganizations,
-                order: order,
-                errors: errors.array(),
-            });
-            return;
-        } else {
-            const oldOrder = await Order.findByPk(req.params.orderId);
-            oldOrder.organizationCustomerId = order.organizationCustomerId;
-            oldOrder.status = order.status;
-            oldOrder.billNumber = order.billNumber;
-            oldOrder.dispatchDate = order.dispatchDate
-            await oldOrder.save();
-            res.status(200).send('Заказ успешно обновлен!');
-        }
-    }),
-];
-
 
 
 
