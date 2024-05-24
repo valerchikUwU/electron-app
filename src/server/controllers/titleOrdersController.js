@@ -78,7 +78,7 @@ exports.user_titleOrder_update_put = [
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
                     // Проверяем, были ли предоставлены новые значения для полей
-                    
+
                     if (title.accessType) {
                         oldTitle.accessType = title.accessType;
                     }
@@ -149,6 +149,8 @@ exports.admin_titleOrder_update_put = [
     body("payeeId")
         .optional({ checkFalsy: true })
         .escape(),
+    body("isFromDeposit")
+        .escape(),
     body("titlesToUpdate.*.productId")
         .if(body("productId").exists())
         .trim()
@@ -197,6 +199,7 @@ exports.admin_titleOrder_update_put = [
             status: req.body.status,
             billNumber: req.body.billNumber,
             payeeId: req.body.payeeId,
+            isFromDeposit: req.body.isFromDeposit,
             dispatchDate: req.body.status === 'Отправлен' ? new Date() : null,
             _id: req.params.orderId
         });
@@ -224,6 +227,7 @@ exports.admin_titleOrder_update_put = [
             oldOrder.status = order.status;
             oldOrder.billNumber = order.billNumber;
             oldOrder.payeeId = order.payeeId;
+            oldOrder.isFromDeposit = order.isFromDeposit
             oldOrder.dispatchDate = order.dispatchDate;
             await oldOrder.save();
 
@@ -231,13 +235,7 @@ exports.admin_titleOrder_update_put = [
             for (const title of titlesToUpdate) {
                 const oldTitle = await TitleOrders.findByPk(title.id);
                 if (oldTitle) {
-                    // Проверяем, были ли предоставлены новые значения для полей
-                    if (title.addBooklet === 1) {
-                        oldTitle.accessType = null;
-                    }
-                    else {
-                        oldTitle.addBooklet = title.addBooklet;
-                    }
+                    
                     if (title.accessType) {
                         oldTitle.accessType = title.accessType;
                     }
@@ -252,7 +250,14 @@ exports.admin_titleOrder_update_put = [
 
                     if (title.quantity)
                         oldTitle.quantity = title.quantity;
-
+                    
+                    if (title.addBooklet === true) {
+                        oldTitle.addBooklet = title.addBooklet;
+                        oldTitle.accessType = null;
+                    }
+                    else {
+                        oldTitle.addBooklet = title.addBooklet;
+                    }
                     await oldTitle.save();
                 }
             }
