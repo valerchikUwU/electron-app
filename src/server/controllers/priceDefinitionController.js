@@ -25,6 +25,15 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
             where: { productTypeId: 3 }
         }]
     });
+    pricesInit.forEach(prices => {
+        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+    });
+    pricesMain.forEach(prices => {
+        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+    });
+    pricesForEmployers.forEach(prices => {
+        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+    });
     res.json({
         title: "Список прайс листов",
         pricesInit: pricesInit,
@@ -35,17 +44,14 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
 );
 
 exports.price_create_get = asyncHandler(async (req, res, next) => {
-    const priceDef = PriceDefinition.findByPk(req.params.priceDefId)
-    const [allProducts, thisProduct] = await Promise.all([
-        Product.findAll({ order: [['name']] }),
-        Product.findOne({ where: { id: priceDef.productId } })
+    const [allProducts] = await Promise.all([
+        Product.findAll({ order: [['name']] })
     ]);
 
     // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
     res.json({
         title: "Форма создания прайс листа",
-        allProducts: allProducts,
-        thisProduct: thisProduct
+        allProducts: allProducts
     });
 });
 

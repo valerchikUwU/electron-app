@@ -22,6 +22,7 @@ const Account = sequelize.define('Account', {
    },
    telephoneNumber: {
       type: DataTypes.STRING,
+      unique: true,
       allowNull: false
    },
    telegramId: {

@@ -128,7 +128,6 @@ exports.account_organization_create_post = [
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             telephoneNumber: req.body.telephoneNumber,
-            telegramId: req.body.telegramId,
             organizationList: req.body.organizationList,
             roleId: 3
         });

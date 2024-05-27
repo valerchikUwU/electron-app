@@ -96,13 +96,28 @@ const swaggerDefinition = {
       description: 'Development server',
     },
   ],
+  tags: [
+    {name: 'Account'},
+    {name: 'AccuralRule'},
+    {name: 'CommisiotReceiver'},
+    {name: 'Order'},
+    {name: 'OrganizationCustomer'},
+    {name: 'Payee'},
+    {name: 'PriceDefinition'},
+    {name: 'Product'},
+    {name: 'ProductType'},
+    {name: 'Role'},
+    {name: 'TitleOrders'},
+    {name: 'Authentication'}
+  ]
 };
 
 const options = {
   swaggerDefinition,
   // Paths to files containing OpenAPI definitions
-  apis: ['/routes/*.js'],
+  apis: ['../../docs/*.js'],
 };
+
 
 
 const swaggerSpec = swaggerJSDoc(options);
