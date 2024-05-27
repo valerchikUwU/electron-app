@@ -9,42 +9,6 @@ const titleOrders_controller = require("../controllers/titleOrdersController");
 const deposit_controller = require("../controllers/depositController")
 const checkAbilities = require('../../utils/checkAbility');
 
-const swaggerSchema = require('../../swagger-schema');
-
-/**
- * @swagger
- * components:
- *  schemas:
- *    Product:
- *      type: object
- *      properties:
- *        id:
- *          type: string
- *          format: uuid
- *          example: 8800e557-6247-4f12-a9d8-534d59c09318
- *        name:
- *          type: string
- *          example: product
- *        abbreviation:
- *          type: string
- *          example: KPSS
- *        createdAt:
- *          type: string
- *          format: date-time
- *          example: 2024-05-01 17:25:00
- *        updatedAt:
- *          type: string
- *          format: date-time
- *          example: 2024-05-01 17:25:00
- *        productTypeId:
- *          type: integer
- *          example: 1
- */
-
-
-
-
-
 
 
 /*
@@ -53,41 +17,14 @@ const swaggerSchema = require('../../swagger-schema');
 ============================================================
 */
 
+
+
 /**
  * Запрос GET для получения всех товаров определенного типа
  * @param typeId - Тип продукта
  */
 
 
-/**
- * @swagger
- * /{accountId}/productsByType/{typeId}:
- *  get:
- *      summary: Получить список всех товаров по категории
- *      parameters:
- *        - in: path
- *          name: accountId
- *          required: true
- *          schema:
- *            type: string
- *            format: uuid
- *          description: ID пользователя
- *        - in: path
- *          name: typeId
- *          required: true
- *          schema:
- *            type: integer
- *          description: ID категории товаров
- *      responses:
- *        200:
- *          description: Список товаров
- *          content:
- *            application/json:
- *              schema:
- *                type: array
- *                items:
- *                  $ref: '#/components/schemas/Product'
- */
 router.get("/:accountId/productsByType/:typeId", checkAbilities('read', 'Product'), products_controller.products_list);
 
 

@@ -42,7 +42,8 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
                 },
                 {
                     model: OrganizationCustomer,
-                    as: 'organization'
+                    as: 'organization',
+                    attributes: ['organizationName']
                 }
             ],
             attributes: {
@@ -75,6 +76,10 @@ exports.user_active_orders_list = asyncHandler(async (req, res, next) => {
     }
 
 });
+
+
+
+
 
 exports.user_finished_orders_list = asyncHandler(async (req, res, next) => {
     const accountId = req.params.accountId;
@@ -586,7 +591,7 @@ exports.user_order_create_post = [
                 raw: true
             })
             if (draftOrder !== null) {
-
+                
                 throw createHttpError(400, 'Измените черновик депозита!')
             }
 
@@ -911,24 +916,4 @@ async function ifProductTypeDeposit(productId) {
     }
     else return false;
 }
-
-
-// async function createTitleOrder(productId, orderId, accessType, generation, addBooklet, quantity, priceDefId) {
-//     try {
-//         await TitleOrders.create({
-//             productId: productId,
-//             orderId: orderId,
-//             accessType: accessType,
-//             generation: generation,
-//             addBooklet: addBooklet,
-//             quantity: quantity,
-//             priceDefId: priceDefId
-//         });
-//         return true;
-//     } catch (err) {
-//         console.error('ERROR CREATING TITLE:', err);
-//         return false;
-//     }
-// }
-
 
