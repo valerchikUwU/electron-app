@@ -1666,7 +1666,7 @@
 /**
  * @swagger
  * /{accountId}/prices/newPrice:
- *  get:
+ *  post:
  *      tags:
  *          - PriceDefinition
  *      summary: Запрос GET для получения формы для создания нового прайс листа (PriceDefinition)
