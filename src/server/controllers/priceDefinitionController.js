@@ -26,13 +26,13 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
         }]
     });
     pricesInit.forEach(prices => {
-        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+        prices.formattedActivationDate = prices.activationDate ? dateFns.format(prices.activationDate, 'dd-MM-yyyy') : null;
     });
     pricesMain.forEach(prices => {
-        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+        prices.formattedActivationDate = prices.activationDate ? dateFns.format(prices.activationDate, 'dd-MM-yyyy') : null;
     });
     pricesForEmployers.forEach(prices => {
-        prices.formattedDispatchDate = prices.dispatchDate ? dateFns.format(prices.dispatchDate, 'dd-MM-yyyy') : null;
+        prices.formattedActivationDate = prices.activationDate ? dateFns.format(prices.activationDate, 'dd-MM-yyyy') : null;
     });
     res.json({
         title: "Список прайс листов",
