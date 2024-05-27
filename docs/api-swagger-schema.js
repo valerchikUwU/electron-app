@@ -1686,6 +1686,10 @@
  *              schema:
  *                type: object
  *                properties:
+ *                      productTypeId:
+ *                          type: integer
+ *                          description: ID категории товара
+ *                          example: 1
  *                      name:
  *                          type: string
  *                          description: Название товара
