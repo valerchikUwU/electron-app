@@ -43,17 +43,6 @@ exports.prices_list = asyncHandler(async (req, res, next) => {
 }
 );
 
-exports.price_create_get = asyncHandler(async (req, res, next) => {
-    const [allProducts] = await Promise.all([
-        Product.findAll({ order: [['name']] })
-    ]);
-
-    // Отправляем ответ клиенту в формате JSON, содержащий заголовок и массив типов продуктов.
-    res.json({
-        title: "Форма создания прайс листа",
-        allProducts: allProducts
-    });
-});
 
 exports.price_create_post = [
 
@@ -71,7 +60,9 @@ exports.price_create_post = [
     body("priceBooklet", "Цена буклета должна быть указана")
         .isInt({ min: 1 })
         .escape(),
-
+    body("productTypeId")
+        .isInt({ min: 1, max: 3})
+        .escape(),
 
     asyncHandler(async (req, res, next) => {
 
@@ -80,6 +71,7 @@ exports.price_create_post = [
         const product = new Product({
             name: req.body.name,
             abbreviation: req.body.abbreviation,
+            productTypeId: req.body.productTypeId
         })
 
 
@@ -102,7 +94,7 @@ exports.price_create_post = [
                 price: price,
                 errors: errors.array(),
             });
-        } 
+        }
         else {
 
             await product.save();
@@ -136,7 +128,7 @@ exports.price_update_get = asyncHandler(async (req, res, next) => {
 
 exports.price_update_put = [
 
-    
+
     body("priceAccess", "priceAccess must not be empty.")
         .trim()
         .isLength({ min: 1 })
