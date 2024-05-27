@@ -4,6 +4,8 @@ const { Sequelize, Op, fn, col } = require('sequelize');
 const PriceDefinition = require('../../models/priceDefinition');
 const Product = require('../../models/product');
 const ProductType = require('../../models/productType');
+const dateFns = require('date-fns');
+
 
 exports.prices_list = asyncHandler(async (req, res, next) => {
     const pricesInit = await PriceDefinition.findAll({
