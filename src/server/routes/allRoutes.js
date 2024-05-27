@@ -168,10 +168,6 @@ router.post("/:accountId/payees/newPayee", checkAbilities('create', 'SuperAdmin'
  */
 router.get("/:accountId/prices", checkAbilities('read', 'PriceDefinition'), priceDefinition_controller.prices_list);
 /**
- * Запрос GET для получения формы для создания нового прайс листа (PriceDefinition)
- */
-router.get("/:accountId/prices/newPrice", checkAbilities('read', 'PriceDefinition'), priceDefinition_controller.price_create_get);
-/**
  * Запрос POST для создания нового прайс листа (PriceDefinition)
  */
 router.post("/:accountId/prices/newPrice", checkAbilities('create', 'PriceDefinition'), priceDefinition_controller.price_create_post);
